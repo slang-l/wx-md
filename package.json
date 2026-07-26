@@ -1,0 +1,18 @@
+{
+  "name": "wx-md",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": "^20.12.0 || >=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @wx-md/web --filter @wx-md/api dev",
+    "dev:web": "pnpm --filter @wx-md/web dev",
+    "dev:api": "pnpm --filter @wx-md/api dev",
+    "build": "pnpm --filter \"./apps/**\" --if-present build",
+    "typecheck": "pnpm --filter \"./apps/**\" --if-present typecheck",
+    "test": "pnpm --filter \"./apps/**\" --if-present test",
+    "check": "pnpm typecheck && pnpm test && pnpm build"
+  }
+}

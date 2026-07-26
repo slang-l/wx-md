@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "caishen-office-worker",
+  "displayName": "财神打工版",
+  "version": "1.0.0",
+  "images": {
+    "hero": "assets/hero.png"
+  },
+  "copy": {
+    "tagline": "今日搬砖，明日生财",
+    "signature": "财神打工版"
+  },
+  "targets": {
+    "codex": {
+      "css": "codex.css",
+      "options": {
+        "rendererProfile": "codex-theme-v1",
+        "baseTheme": {
+          "mode": "light",
+          "codeTheme": "codex",
+          "accent": "#B7352B",
+          "contrast": 84,
+          "ink": "#34251D",
+          "surface": "#F7EBD0",
+          "opaqueWindows": true,
+          "fonts": {
+            "windowsCode": "Cascadia Code",
+            "windowsUi": "Microsoft YaHei UI",
+            "macCode": "SF Mono",
+            "macUi": "PingFang SC"
+          },
+          "semanticColors": {
+            "diffAdded": "#DFE9D2",
+            "diffRemoved": "#F3D5CE",
+            "skill": "#B7352B"
+          }
+        }
+      },
+      "verification": {
+        "contexts": [
+          {
+            "name": "home",
+            "when": {
+              "any": ["[role='main']:has([data-testid='home-icon'])"]
+            },
+            "required": [
+              {
+                "name": "home-hero-shell",
+                "any": ["[role='main']:has([data-testid='home-icon']) > div:first-child > div:first-child > div:first-child"]
+              }
+            ],
+            "recommended": [
+              {
+                "name": "home-suggestions",
+                "any": [".group\\/home-suggestions"]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
