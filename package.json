@@ -10,9 +10,15 @@
     "dev": "pnpm --parallel --filter @wx-md/web --filter @wx-md/api dev",
     "dev:web": "pnpm --filter @wx-md/web dev",
     "dev:api": "pnpm --filter @wx-md/api dev",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @wx-md/api db:migrate",
     "build": "pnpm --filter \"./apps/**\" --if-present build",
     "typecheck": "pnpm --filter \"./apps/**\" --if-present typecheck",
     "test": "pnpm --filter \"./apps/**\" --if-present test",
     "check": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "vite": "6.4.3"
   }
 }

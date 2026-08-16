@@ -1,17 +1,31 @@
-import { Cloud, FileText, PenLine, Plus, Search, Trash2, X } from 'lucide-react';
+import { FileText, LogOut, Mail, PenLine, Plus, Search, Settings2, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import type { AuthUser } from '../../services/auth-api';
 import { useDocsStore } from '../../store/docsStore';
 import type { AppDoc } from '../../types/document';
 
 interface DocumentSidebarProps {
   docs: AppDoc[];
   currentDocId: string;
+  isSigningOut: boolean;
   onDocumentOpen?: () => void;
+  onOpenSettings: () => void;
+  onSignOut: () => void | Promise<void>;
+  user: AuthUser;
 }
 
-export function DocumentSidebar({ docs, currentDocId, onDocumentOpen }: DocumentSidebarProps) {
+export function DocumentSidebar({
+  docs,
+  currentDocId,
+  isSigningOut,
+  onDocumentOpen,
+  onOpenSettings,
+  onSignOut,
+  user,
+}: DocumentSidebarProps) {
   const createDoc = useDocsStore((state) => state.createDoc);
   const [query, setQuery] = useState('');
+  const userInitials = getUserInitials(user);
   const filteredDocs = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
     if (!normalizedQuery) return docs;
@@ -32,7 +46,7 @@ export function DocumentSidebar({ docs, currentDocId, onDocumentOpen }: Document
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] font-semibold leading-4 text-[#252525]">Block Notes</div>
-            <div className="truncate text-xs leading-4 text-[#858585]">张磊的空间</div>
+            <div className="truncate text-xs leading-4 text-[#858585]">{user.name} 的空间</div>
           </div>
           <button
             className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#737373] transition-colors hover:bg-black/[0.06] hover:text-[#252525]"
@@ -93,21 +107,59 @@ export function DocumentSidebar({ docs, currentDocId, onDocumentOpen }: Document
       </nav>
 
       <div className="mt-2 border-t border-black/[0.07] pt-2">
-        <div className="flex h-11 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-black/[0.035]">
-          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-white text-xs font-semibold text-[#5f6fd8] ring-1 ring-black/[0.06]">
-            ZL
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-medium leading-4 text-[#383838]">张磊</div>
-            <div className="flex items-center gap-1 text-xs leading-4 text-[#8a8a8a]">
-              <Cloud size={11} />
-              本地自动保存
-            </div>
-          </div>
+        <div className="group/account flex h-11 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-black/[0.035]">
+          <button
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)]"
+            type="button"
+            aria-label="打开设置"
+            title="打开设置"
+            onClick={onOpenSettings}
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-white text-xs font-semibold text-[#5f6fd8] ring-1 ring-black/[0.06]">
+              {userInitials}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-medium leading-4 text-[#383838]">{user.name}</span>
+              <span className="flex min-w-0 items-center gap-1 text-xs leading-4 text-[#8a8a8a]" title={user.email}>
+                <Mail className="shrink-0" size={11} />
+                <span className="truncate">{user.email}</span>
+              </span>
+            </span>
+          </button>
+          <button
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#888] opacity-70 transition-colors hover:bg-black/[0.06] hover:text-[#383838] focus-visible:opacity-100 group-hover/account:opacity-100"
+            type="button"
+            aria-label="打开设置"
+            title="设置"
+            onClick={onOpenSettings}
+          >
+            <Settings2 size={14} strokeWidth={1.8} />
+          </button>
+          <button
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#888] opacity-70 transition-colors hover:bg-black/[0.06] hover:text-[var(--ui-status-danger)] focus-visible:opacity-100 group-hover/account:opacity-100"
+            type="button"
+            aria-label={isSigningOut ? '正在退出登录' : '退出登录'}
+            title={isSigningOut ? '正在退出登录' : '退出登录'}
+            disabled={isSigningOut}
+            onClick={onSignOut}
+          >
+            <LogOut size={14} strokeWidth={1.8} />
+          </button>
         </div>
       </div>
     </aside>
   );
+}
+
+function getUserInitials(user: AuthUser): string {
+  const displayName = user.name.trim() || user.email.split('@')[0] || 'U';
+  const words = displayName.split(/\s+/).filter(Boolean);
+
+  if (words.length > 1) {
+    return words.slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase();
+  }
+
+  return Array.from(displayName).slice(0, 2).join('').toUpperCase();
 }
 
 function DocumentListItem({ doc, active, onOpen }: { doc: AppDoc; active: boolean; onOpen?: () => void }) {

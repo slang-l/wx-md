@@ -7,11 +7,13 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { FileText, PanelRight, PenLine } from 'lucide-react';
+import { FileText, LogOut, PanelRight, PenLine, Settings2 } from 'lucide-react';
 import { EditorColumn } from '../editor/EditorColumn';
+import { SettingsModal } from '../settings';
 import { DocumentSidebar } from '../sidebar/DocumentSidebar';
 import { useDocsStore } from '../../store/docsStore';
 import { WeChatPreview } from '../preview/WeChatPreview';
+import type { AuthUser } from '../../services/auth-api';
 
 type ResizeEdge = 'left-editor' | 'editor-preview';
 type CompactPane = 'documents' | 'editor' | 'preview';
@@ -36,7 +38,13 @@ const DEFAULT_WIDTHS: PanelWidths = {
 };
 const COMPACT_LAYOUT_QUERY = '(max-width: 1099px)';
 
-export function AppLayout() {
+interface AppLayoutProps {
+  isSigningOut: boolean;
+  onSignOut: () => void | Promise<void>;
+  user: AuthUser;
+}
+
+export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
   const docs = useDocsStore((state) => state.docs);
   const currentDocId = useDocsStore((state) => state.currentDocId);
   const currentDoc = docs.find((doc) => doc.id === currentDocId) ?? docs[0];
@@ -49,6 +57,7 @@ export function AppLayout() {
   } | null>(null);
   const [activeResize, setActiveResize] = useState<ResizeEdge | null>(null);
   const [compactPane, setCompactPane] = useState<CompactPane>('editor');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCompactLayout, setIsCompactLayout] = useState(() =>
     typeof window === 'undefined' ? false : window.matchMedia(COMPACT_LAYOUT_QUERY).matches,
   );
@@ -172,7 +181,8 @@ export function AppLayout() {
 
   if (isCompactLayout) {
     return (
-      <main className="flex h-[100dvh] min-h-0 flex-col bg-[var(--ui-app-bg)] text-[var(--ui-text)]">
+      <>
+        <main className="flex h-[100dvh] min-h-0 flex-col bg-[var(--ui-app-bg)] text-[var(--ui-text)]">
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--ui-accent)] text-white">
@@ -180,30 +190,51 @@ export function AppLayout() {
             </span>
             <div className="hidden min-w-0 sm:block">
               <div className="truncate text-sm font-semibold tracking-[-0.01em]">Block Notes</div>
-              <div className="text-xs text-[var(--ui-muted)]">内容创作工作台</div>
+              <div className="truncate text-xs text-[var(--ui-muted)]">{user.name}</div>
             </div>
           </div>
 
-          <nav className="flex items-center gap-1 rounded-lg border border-[var(--ui-line)] bg-[var(--ui-subtle)] p-1" aria-label="工作区视图">
-            <CompactNavButton
-              active={compactPane === 'documents'}
-              icon={<FileText size={15} />}
-              label="文档"
-              onClick={() => setCompactPane('documents')}
-            />
-            <CompactNavButton
-              active={compactPane === 'editor'}
-              icon={<PenLine size={15} />}
-              label="编辑"
-              onClick={() => setCompactPane('editor')}
-            />
-            <CompactNavButton
-              active={compactPane === 'preview'}
-              icon={<PanelRight size={15} />}
-              label="预览"
-              onClick={() => setCompactPane('preview')}
-            />
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-1 rounded-lg border border-[var(--ui-line)] bg-[var(--ui-subtle)] p-1" aria-label="工作区视图">
+              <CompactNavButton
+                active={compactPane === 'documents'}
+                icon={<FileText size={15} />}
+                label="文档"
+                onClick={() => setCompactPane('documents')}
+              />
+              <CompactNavButton
+                active={compactPane === 'editor'}
+                icon={<PenLine size={15} />}
+                label="编辑"
+                onClick={() => setCompactPane('editor')}
+              />
+              <CompactNavButton
+                active={compactPane === 'preview'}
+                icon={<PanelRight size={15} />}
+                label="预览"
+                onClick={() => setCompactPane('preview')}
+              />
+            </nav>
+            <button
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--ui-muted)] transition-colors hover:bg-[var(--ui-subtle)] hover:text-[var(--ui-text)]"
+              type="button"
+              aria-label="打开设置"
+              title="设置"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings2 size={16} strokeWidth={1.8} />
+            </button>
+            <button
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--ui-muted)] transition-colors hover:bg-[var(--ui-subtle)] hover:text-[var(--ui-status-danger)]"
+              type="button"
+              aria-label={isSigningOut ? '正在退出登录' : '退出登录'}
+              title={isSigningOut ? '正在退出登录' : '退出登录'}
+              disabled={isSigningOut}
+              onClick={onSignOut}
+            >
+              <LogOut size={16} strokeWidth={1.8} />
+            </button>
+          </div>
         </header>
 
         <div className="min-h-0 min-w-0 flex-1 overflow-hidden [&>*]:h-full [&>*]:w-full">
@@ -211,52 +242,82 @@ export function AppLayout() {
             <DocumentSidebar
               docs={docs}
               currentDocId={currentDoc.id}
+              isSigningOut={isSigningOut}
               onDocumentOpen={() => setCompactPane('editor')}
+              onOpenSettings={() => setSettingsOpen(true)}
+              onSignOut={onSignOut}
+              user={user}
             />
           ) : null}
           {compactPane === 'editor' ? <EditorColumn doc={currentDoc} /> : null}
           {compactPane === 'preview' ? <WeChatPreview doc={currentDoc} /> : null}
         </div>
-      </main>
+        </main>
+        <SettingsModal
+          appName="Block Notes"
+          appVersion="0.1.0"
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          onSignOut={onSignOut}
+          user={user}
+        />
+      </>
     );
   }
 
   return (
-    <main
-      ref={layoutRef}
-      className={`grid h-[100dvh] bg-[var(--ui-app-bg)] text-[var(--ui-text)] ${activeResize ? 'cursor-col-resize select-none' : ''}`}
-      style={{ gridTemplateColumns }}
-    >
-      <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
-        <DocumentSidebar docs={docs} currentDocId={currentDoc.id} />
-      </div>
-      <ResizeHandle
-        active={activeResize === 'left-editor'}
-        edge="left-editor"
-        label="Resize sidebar and editor"
-        onKeyDown={resizeWithKeyboard}
-        onPointerCancel={endResize}
-        onPointerDown={beginResize}
-        onPointerMove={updateResize}
-        onPointerUp={endResize}
+    <>
+      <main
+        ref={layoutRef}
+        className={`grid h-[100dvh] bg-[var(--ui-app-bg)] text-[var(--ui-text)] ${activeResize ? 'cursor-col-resize select-none' : ''}`}
+        style={{ gridTemplateColumns }}
+      >
+        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
+          <DocumentSidebar
+            currentDocId={currentDoc.id}
+            docs={docs}
+            isSigningOut={isSigningOut}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onSignOut={onSignOut}
+            user={user}
+          />
+        </div>
+        <ResizeHandle
+          active={activeResize === 'left-editor'}
+          edge="left-editor"
+          label="Resize sidebar and editor"
+          onKeyDown={resizeWithKeyboard}
+          onPointerCancel={endResize}
+          onPointerDown={beginResize}
+          onPointerMove={updateResize}
+          onPointerUp={endResize}
+        />
+        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
+          <EditorColumn doc={currentDoc} />
+        </div>
+        <ResizeHandle
+          active={activeResize === 'editor-preview'}
+          edge="editor-preview"
+          label="Resize editor and preview"
+          onKeyDown={resizeWithKeyboard}
+          onPointerCancel={endResize}
+          onPointerDown={beginResize}
+          onPointerMove={updateResize}
+          onPointerUp={endResize}
+        />
+        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
+          <WeChatPreview doc={currentDoc} />
+        </div>
+      </main>
+      <SettingsModal
+        appName="Block Notes"
+        appVersion="0.1.0"
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        onSignOut={onSignOut}
+        user={user}
       />
-      <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
-        <EditorColumn doc={currentDoc} />
-      </div>
-      <ResizeHandle
-        active={activeResize === 'editor-preview'}
-        edge="editor-preview"
-        label="Resize editor and preview"
-        onKeyDown={resizeWithKeyboard}
-        onPointerCancel={endResize}
-        onPointerDown={beginResize}
-        onPointerMove={updateResize}
-        onPointerUp={endResize}
-      />
-      <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
-        <WeChatPreview doc={currentDoc} />
-      </div>
-    </main>
+    </>
   );
 }
 
@@ -333,7 +394,7 @@ function CompactNavButton({
       onClick={onClick}
     >
       {icon}
-      <span>{label}</span>
+      <span className="hidden min-[480px]:inline">{label}</span>
     </button>
   );
 }

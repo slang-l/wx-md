@@ -3,6 +3,25 @@ import { escapeHtml } from '../utils/escape';
 import { formatDateTime } from '../utils/date';
 import { defaultWechatThemeId, getWechatTheme, type WechatTheme } from './wechat-themes';
 
+const BLOCKSUITE_INLINE_COLORS: Readonly<Record<string, string>> = {
+  'var(--affine-text-highlight-red)': 'rgba(254, 213, 213, 1)',
+  'var(--affine-text-highlight-orange)': 'rgba(254, 223, 187, 1)',
+  'var(--affine-text-highlight-yellow)': 'rgba(254, 243, 161, 1)',
+  'var(--affine-text-highlight-green)': 'rgba(225, 250, 177, 1)',
+  'var(--affine-text-highlight-teal)': 'rgba(173, 248, 233, 1)',
+  'var(--affine-text-highlight-blue)': 'rgba(204, 226, 254, 1)',
+  'var(--affine-text-highlight-purple)': 'rgba(237, 221, 255, 1)',
+  'var(--affine-text-highlight-grey)': 'rgba(234, 236, 239, 1)',
+  'var(--affine-text-highlight-foreground-red)': 'rgba(198, 34, 34, 1)',
+  'var(--affine-text-highlight-foreground-orange)': 'rgba(211, 79, 11, 1)',
+  'var(--affine-text-highlight-foreground-yellow)': 'rgba(182, 124, 4, 1)',
+  'var(--affine-text-highlight-foreground-green)': 'rgba(20, 147, 67, 1)',
+  'var(--affine-text-highlight-foreground-teal)': 'rgba(7, 130, 160, 1)',
+  'var(--affine-text-highlight-foreground-blue)': 'rgba(33, 89, 211, 1)',
+  'var(--affine-text-highlight-foreground-purple)': 'rgba(132, 46, 211, 1)',
+  'var(--affine-text-highlight-foreground-grey)': 'rgba(68, 77, 89, 1)',
+};
+
 export function renderWechatHtml(doc: AppDoc, themeId = defaultWechatThemeId) {
   const theme = getWechatTheme(themeId);
   const bodyBlocks = skipDuplicatedTitle(doc);
@@ -203,6 +222,9 @@ function renderInlineDelta(delta: InlineTextDelta[], theme: WechatTheme) {
       const attributes = part.attributes ?? {};
       let value = escapeHtml(part.insert);
 
+      const inlineColorStyle = renderInlineColorStyle(attributes.color, attributes.background);
+      if (inlineColorStyle) value = `<span style="${inlineColorStyle}">${value}</span>`;
+
       if (attributes.code) value = `<code style="${theme.styles.inlineCode}">${value}</code>`;
       if (attributes.bold) value = `<strong style="${theme.styles.strong}">${value}</strong>`;
       if (attributes.italic) value = `<em style="${theme.styles.em}">${value}</em>`;
@@ -215,6 +237,22 @@ function renderInlineDelta(delta: InlineTextDelta[], theme: WechatTheme) {
       return value;
     })
     .join('');
+}
+
+function renderInlineColorStyle(color: string | null | undefined, background: string | null | undefined) {
+  const styles: string[] = [];
+  const resolvedColor = resolveBlockSuiteInlineColor(color);
+  const resolvedBackground = resolveBlockSuiteInlineColor(background);
+
+  if (resolvedColor) styles.push(`color:${resolvedColor}`);
+  if (resolvedBackground) styles.push(`background-color:${resolvedBackground}`);
+
+  return styles.join(';');
+}
+
+function resolveBlockSuiteInlineColor(value: string | null | undefined) {
+  if (!value) return null;
+  return BLOCKSUITE_INLINE_COLORS[value.trim()] ?? null;
 }
 
 function isSafeLink(value: string) {
