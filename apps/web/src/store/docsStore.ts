@@ -15,7 +15,7 @@ let docsHydrationPromise: Promise<void> | null = null;
 interface DocsState {
   docs: AppDoc[];
   currentDocId: string;
-  createDoc: () => string;
+  createDoc: (parentId?: string) => string;
   deleteDoc: (id: string) => void;
   setCurrentDocId: (id: string) => void;
   renameDoc: (id: string, title: string) => void;
@@ -34,9 +34,9 @@ export const useDocsStore = create<DocsState>()(
   persist(
     (set, get) => ({
       docs: mockDocs,
-      currentDocId: mockDocs[2]?.id ?? mockDocs[0].id,
-      createDoc: () => {
-        const doc = createStarterDoc();
+      currentDocId: mockDocs[0].id,
+      createDoc: (parentId) => {
+        const doc = createStarterDoc(parentId);
         set((state) => ({
           docs: [doc, ...state.docs],
           currentDocId: doc.id,
@@ -127,7 +127,7 @@ export function loadDocsForUser(userId: string): Promise<void> {
   if (window.localStorage.getItem(storageKey) === null) {
     useDocsStore.setState({
       docs: mockDocs,
-      currentDocId: mockDocs[2]?.id ?? mockDocs[0].id,
+      currentDocId: mockDocs[0].id,
     });
     activeDocsOwnerLoaded = true;
     return Promise.resolve();

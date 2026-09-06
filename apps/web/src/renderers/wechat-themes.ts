@@ -40,8 +40,8 @@ export interface WechatThemeStyles {
   footer: string;
 }
 
-export interface WechatTheme {
-  id: WechatThemeId;
+export interface WechatTheme<Id extends string = WechatThemeId | 'custom'> {
+  id: Id;
   label: string;
   description: string;
   accent: string;
@@ -259,7 +259,7 @@ function createBaseStyles(color: string, fontFamily = sansFont, fontSize = 16): 
   };
 }
 
-function createWechatTheme(options: CreateThemeOptions): WechatTheme {
+function createWechatTheme(options: CreateThemeOptions): WechatTheme<WechatThemeId> {
   const fontFamily = options.fontFamily ?? sansFont;
   const fontSize = options.fontSize ?? 16;
   const baseStyles = createBaseStyles(options.primaryColor, fontFamily, fontSize);

@@ -1,5 +1,5 @@
 import { createEmptyDoc } from '@blocksuite/presets';
-import { Text, type BlockModel, type DeltaOperation, type Doc } from '@blocksuite/store';
+import { Text, type BlockModel, type Doc } from '@blocksuite/store';
 import type { InlineTextDelta, NormalizedBlock } from '../types/document';
 
 type ParagraphType = 'text' | 'quote' | 'h1' | 'h2' | 'h3';
@@ -117,6 +117,29 @@ export function observeBlockSuiteTitle(doc: Doc, callback: (title: string) => vo
   };
 }
 
+export function insertNormalizedBlocks(
+  doc: Doc,
+  blocks: NormalizedBlock[],
+  afterBlockId?: string | null,
+): string[] {
+  const note = getDefaultNote(doc);
+  if (!note || blocks.length === 0) return [];
+
+  const anchor = afterBlockId ? getDirectNoteChild(doc, note, afterBlockId) : null;
+  let insertionIndex = anchor ? note.children.indexOf(anchor) + 1 : note.children.length;
+  const insertedIds: string[] = [];
+
+  doc.transact(() => {
+    blocks.forEach((block) => {
+      const blockIds = appendNormalizedBlock(doc, note, block, insertionIndex);
+      insertedIds.push(...blockIds);
+      insertionIndex += blockIds.length;
+    });
+  });
+
+  return insertedIds;
+}
+
 function bodyBlocksForTitle(title: string, blocks: NormalizedBlock[]) {
   const first = blocks[0];
 
@@ -127,49 +150,56 @@ function bodyBlocksForTitle(title: string, blocks: NormalizedBlock[]) {
   return blocks;
 }
 
-function appendNormalizedBlock(doc: Doc, note: BlockModel, block: NormalizedBlock) {
+function appendNormalizedBlock(
+  doc: Doc,
+  note: BlockModel,
+  block: NormalizedBlock,
+  index?: number,
+): string[] {
   switch (block.type) {
     case 'heading':
-      appendParagraph(doc, note, `h${block.level ?? 2}` as ParagraphType, block.text ?? '', block.delta);
-      return;
+      return [appendParagraph(doc, note, `h${block.level ?? 2}` as ParagraphType, block.text ?? '', block.delta, index)];
     case 'quote':
-      appendParagraph(doc, note, 'quote', block.text ?? '', block.delta);
-      return;
+      return [appendParagraph(doc, note, 'quote', block.text ?? '', block.delta, index)];
     case 'code':
-      doc.addBlock(
+      return [doc.addBlock(
         'affine:code',
         {
-          text: createYText(block.text ?? ''),
+          text: new Text(block.text ?? ''),
           language: block.language ?? 'Plain Text',
         },
         note.id,
-      );
-      return;
+        index,
+      )];
     case 'bulleted-list':
     case 'numbered-list':
-    case 'todo-list':
-      (block.items ?? ['']).forEach((item, index) => {
-        doc.addBlock(
+    case 'todo-list': {
+      const insertedIds: string[] = [];
+      (block.items ?? ['']).forEach((item, itemIndex) => {
+        const delta = block.itemDeltas?.[itemIndex];
+        const id = doc.addBlock(
           'affine:list',
           {
             type:
               block.type === 'numbered-list' ? 'numbered' : block.type === 'todo-list' ? 'todo' : 'bulleted',
-            text: createYText(item, block.itemDeltas?.[index]),
-            checked: block.checked?.[index] ?? false,
+            text: new Text(textFromDelta(delta, item)),
+            checked: block.checked?.[itemIndex] ?? false,
             collapsed: false,
           },
           note.id,
+          index === undefined ? undefined : index + itemIndex,
         );
+        applyInlineFormatting(doc, id, delta);
+        insertedIds.push(id);
       });
-      return;
+      return insertedIds;
+    }
     case 'divider':
-      doc.addBlock('affine:divider', {}, note.id);
-      return;
+      return [doc.addBlock('affine:divider', {}, note.id, index)];
     case 'image':
-      appendImage(doc, note, block);
-      return;
+      return [appendImage(doc, note, block, index)];
     default:
-      appendParagraph(doc, note, 'text', block.text ?? '', block.delta);
+      return [appendParagraph(doc, note, 'text', block.text ?? '', block.delta, index)];
   }
 }
 
@@ -179,15 +209,32 @@ function appendParagraph(
   type: ParagraphType,
   text: string,
   delta?: InlineTextDelta[],
-) {
-  doc.addBlock(
+  index?: number,
+): string {
+  const id = doc.addBlock(
     'affine:paragraph',
     {
       type,
-      text: createYText(text, delta),
+      text: new Text(textFromDelta(delta, text)),
     },
     note.id,
+    index,
   );
+  applyInlineFormatting(doc, id, delta);
+  return id;
+}
+
+function getDirectNoteChild(doc: Doc, note: BlockModel, blockId: string): BlockModel | null {
+  let current = doc.getBlockById(blockId);
+
+  while (current) {
+    const parent = doc.getParent(current.id);
+    if (!parent) return null;
+    if (parent.id === note.id) return current;
+    current = parent;
+  }
+
+  return null;
 }
 
 function normalizeBlockModel(model: BlockModel): NormalizedBlock | null {
@@ -268,23 +315,37 @@ function getModelDelta(model: BlockModel): InlineTextDelta[] {
   });
 }
 
-function createYText(text: string, delta?: InlineTextDelta[]) {
-  if (delta?.length) {
-    return Text.fromDelta(delta as DeltaOperation[]);
-  }
-  return new Text(text);
+function textFromDelta(delta: InlineTextDelta[] | undefined, fallback: string) {
+  return delta?.length ? delta.map((operation) => operation.insert).join('') : fallback;
 }
 
-function appendImage(doc: Doc, note: BlockModel, block: NormalizedBlock) {
+function applyInlineFormatting(doc: Doc, blockId: string, delta: InlineTextDelta[] | undefined) {
+  if (!delta?.length) return;
+
+  const text = doc.getBlockById(blockId)?.text;
+  if (!text) return;
+
+  let index = 0;
+  delta.forEach((operation) => {
+    const length = operation.insert.length;
+    if (length > 0 && operation.attributes && Object.keys(operation.attributes).length > 0) {
+      text.format(index, length, operation.attributes);
+    }
+    index += length;
+  });
+}
+
+function appendImage(doc: Doc, note: BlockModel, block: NormalizedBlock, index?: number): string {
   const id = doc.addBlock(
     'affine:image',
     {
       caption: block.caption ?? block.alt ?? '',
     },
     note.id,
+    index,
   );
 
-  if (!block.url?.startsWith('data:')) return;
+  if (!block.url?.startsWith('data:')) return id;
 
   void dataUrlToBlob(block.url)
     .then(async (blob) => {
@@ -297,6 +358,8 @@ function appendImage(doc: Doc, note: BlockModel, block: NormalizedBlock) {
       }
     })
     .catch(() => undefined);
+
+  return id;
 }
 
 async function normalizeImageBlock(model: BlockModel): Promise<NormalizedBlock | null> {

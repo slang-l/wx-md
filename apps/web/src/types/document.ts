@@ -44,6 +44,8 @@ export interface AppDoc {
   id: string;
   title: string;
   blocks: NormalizedBlock[];
+  parentId?: string | null;
+  status?: 'active' | 'review';
   author: string;
   location: string;
   createdAt: string;

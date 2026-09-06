@@ -113,7 +113,7 @@ function AuthRecoveryErrorScreen({
 }) {
   return (
     <main className="grid min-h-[100dvh] place-items-center bg-[var(--ui-background)] px-5 text-[var(--ui-text)]">
-      <section className="w-full max-w-sm rounded-2xl border border-[var(--ui-border)] bg-white p-7 text-center shadow-[var(--ui-shadow-card)]">
+      <section className="w-full max-w-sm rounded-[20px] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-7 text-center shadow-[var(--ui-shadow-card)]">
         <h1 className="m-0 text-lg font-semibold">暂时无法恢复登录状态</h1>
         <p className="mb-0 mt-3 text-sm leading-6 text-[var(--ui-text-secondary)]">
           {failure.message}
@@ -124,7 +124,7 @@ function AuthRecoveryErrorScreen({
           </p>
         ) : null}
         <button
-          className="mt-6 h-10 rounded-lg bg-[var(--ui-primary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--ui-primary-hover)]"
+          className="ui-pressable mt-6 h-10 rounded-[10px] bg-[var(--ui-primary)] px-5 text-sm font-semibold text-white hover:bg-[var(--ui-primary-hover)]"
           type="button"
           onClick={onRetry}
         >
@@ -137,6 +137,13 @@ function AuthRecoveryErrorScreen({
 
 function describeRecoveryFailure(error: unknown): AuthRecoveryFailure {
   if (error instanceof AuthApiError) {
+    if (error.code === 'UNTRUSTED_ORIGIN') {
+      return {
+        message: '当前访问地址未加入后端允许列表，请检查 CORS_ORIGINS 配置。',
+        requestId: error.requestId,
+      };
+    }
+
     if (error.code === 'ACCOUNT_DISABLED') {
       return {
         message: '该账号已被停用，请联系管理员。',

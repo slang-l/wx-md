@@ -7,7 +7,9 @@ import {
   Monitor,
   Palette,
   Send,
+  SlidersHorizontal,
   Smartphone,
+  X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Toast, type ToastState } from '../common/Toast';
@@ -15,37 +17,67 @@ import { PublishModal } from '../publish/PublishModal';
 import { renderMarkdown } from '../../renderers/markdown-renderer';
 import { renderWechatHtml } from '../../renderers/wechat-renderer';
 import {
+  createDefaultVisualThemeSettings,
+  createVisualWechatTheme,
+  type VisualThemeSettings,
+} from '../../renderers/visual-theme';
+import {
   defaultWechatThemeId,
   getWechatTheme,
-  isWechatThemeId,
   wechatThemes,
   type WechatThemeId,
 } from '../../renderers/wechat-themes';
 import type { AppDoc } from '../../types/document';
 import { copyRichHtmlToClipboard, copyToClipboard } from '../../utils/clipboard';
+import { VisualThemeEditor } from './VisualThemeEditor';
+import {
+  MAX_SAVED_VISUAL_THEMES,
+  createInitialActiveTheme,
+  loadVisualThemeWorkspace,
+  parseImportedVisualTheme,
+  saveVisualThemeWorkspace,
+  serializeVisualTheme,
+  type SavedVisualTheme,
+} from './visual-theme-storage';
 
-const WECHAT_THEME_STORAGE_KEY = 'block-notes-wechat-theme-v4';
 type PreviewMode = 'desktop' | 'mobile';
 
 interface WeChatPreviewProps {
   doc: AppDoc;
+  onClose?: () => void;
+  userId: string;
 }
 
-export function WeChatPreview({ doc }: WeChatPreviewProps) {
-  const [themeId, setThemeId] = useState<WechatThemeId>(() => {
-    const storedThemeId = window.localStorage.getItem(WECHAT_THEME_STORAGE_KEY);
-    return isWechatThemeId(storedThemeId) ? storedThemeId : defaultWechatThemeId;
-  });
+export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
+  const [themeWorkspace, setThemeWorkspace] = useState(() => loadVisualThemeWorkspace(userId));
   const [toast, setToast] = useState<ToastState>(null);
   const [publishOpen, setPublishOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
-  const theme = getWechatTheme(themeId);
-  const html = useMemo(() => renderWechatHtml(doc, themeId), [doc, themeId]);
+  const [themeEditorOpen, setThemeEditorOpen] = useState(false);
+  const [savingTheme, setSavingTheme] = useState(false);
+  const theme = useMemo(
+    () => themeWorkspace.active
+      ? createVisualWechatTheme(themeWorkspace.active.baseThemeId, themeWorkspace.active.settings)
+      : getWechatTheme(themeWorkspace.themeId),
+    [themeWorkspace.active, themeWorkspace.themeId],
+  );
+  const activeThemeDirty = useMemo(() => {
+    const active = themeWorkspace.active;
+    if (!active) return false;
+    const saved = active.savedId
+      ? themeWorkspace.savedThemes.find((item) => item.id === active.savedId)
+      : undefined;
+    return !saved
+      || saved.name !== active.name.trim().replace(/\s+/g, ' ')
+      || saved.baseThemeId !== active.baseThemeId
+      || JSON.stringify(saved.settings) !== JSON.stringify(active.settings);
+  }, [themeWorkspace.active, themeWorkspace.savedThemes]);
+  const html = useMemo(() => renderWechatHtml(doc, theme), [doc, theme]);
+  const publishHtml = useMemo(
+    () => renderWechatHtml(doc, theme, { includePreviewFooter: false }),
+    [doc, theme],
+  );
   const markdown = useMemo(() => renderMarkdown(doc), [doc]);
-
-  useEffect(() => {
-    window.localStorage.setItem(WECHAT_THEME_STORAGE_KEY, themeId);
-  }, [themeId]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -56,6 +88,14 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
   const notify = useCallback((message: string, tone: 'success' | 'error' = 'success') => {
     setToast({ message, tone });
   }, []);
+
+  useEffect(() => {
+    try {
+      saveVisualThemeWorkspace(userId, themeWorkspace);
+    } catch {
+      notify('主题保存空间不足，请删除不再使用的主题', 'error');
+    }
+  }, [notify, themeWorkspace, userId]);
 
   const handleCopyText = useCallback(
     async (value: string, label: string) => {
@@ -78,52 +118,216 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
     }
   }, [html, notify]);
 
+  const selectBuiltinTheme = (themeId: WechatThemeId) => {
+    setThemeWorkspace((current) => ({ ...current, themeId, active: null }));
+    setThemeEditorOpen(false);
+  };
+
+  const selectSavedTheme = (savedTheme: SavedVisualTheme) => {
+    setThemeWorkspace((current) => ({
+      ...current,
+      themeId: savedTheme.baseThemeId,
+      active: {
+        baseThemeId: savedTheme.baseThemeId,
+        name: savedTheme.name,
+        savedId: savedTheme.id,
+        settings: { ...savedTheme.settings },
+      },
+    }));
+  };
+
+  const openThemeEditor = () => {
+    if (themeEditorOpen) {
+      setThemeEditorOpen(false);
+      return;
+    }
+    setThemeWorkspace((current) => current.active
+      ? current
+      : { ...current, active: createInitialActiveTheme(current.themeId) });
+    setThemeEditorOpen(true);
+  };
+
+  const updateActiveSettings = (settings: VisualThemeSettings) => {
+    setThemeWorkspace((current) => current.active
+      ? { ...current, active: { ...current.active, settings } }
+      : current);
+  };
+
+  const changeBaseTheme = (baseThemeId: WechatThemeId) => {
+    setThemeWorkspace((current) => ({
+      ...current,
+      themeId: baseThemeId,
+      active: {
+        ...(current.active ?? createInitialActiveTheme(baseThemeId)),
+        baseThemeId,
+        settings: createDefaultVisualThemeSettings(baseThemeId),
+      },
+    }));
+  };
+
+  const saveActiveTheme = () => {
+    const active = themeWorkspace.active;
+    if (!active || !active.name.trim()) return;
+    if (!active.savedId && themeWorkspace.savedThemes.length >= MAX_SAVED_VISUAL_THEMES) {
+      notify(`最多保存 ${MAX_SAVED_VISUAL_THEMES} 个自定义主题`, 'error');
+      return;
+    }
+
+    setSavingTheme(true);
+    const now = new Date().toISOString();
+    setThemeWorkspace((current) => {
+      if (!current.active) return current;
+      const normalizedName = current.active.name.trim().replace(/\s+/g, ' ').slice(0, 40);
+      const existing = current.active.savedId
+        ? current.savedThemes.find((item) => item.id === current.active?.savedId)
+        : undefined;
+      const savedTheme: SavedVisualTheme = {
+        id: existing?.id ?? crypto.randomUUID(),
+        name: normalizedName,
+        baseThemeId: current.active.baseThemeId,
+        settings: { ...current.active.settings },
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+      };
+      return {
+        ...current,
+        themeId: savedTheme.baseThemeId,
+        active: {
+          baseThemeId: savedTheme.baseThemeId,
+          name: savedTheme.name,
+          savedId: savedTheme.id,
+          settings: { ...savedTheme.settings },
+        },
+        savedThemes: [savedTheme, ...current.savedThemes.filter((item) => item.id !== savedTheme.id)],
+      };
+    });
+    window.setTimeout(() => setSavingTheme(false), 180);
+    notify(active.savedId ? '主题已更新' : '主题已保存');
+  };
+
+  const deleteActiveTheme = () => {
+    const active = themeWorkspace.active;
+    if (!active?.savedId) return;
+    setThemeWorkspace((current) => ({
+      ...current,
+      themeId: active.baseThemeId,
+      active: null,
+      savedThemes: current.savedThemes.filter((item) => item.id !== active.savedId),
+    }));
+    setThemeEditorOpen(false);
+    notify('主题已删除');
+  };
+
+  const exportActiveTheme = () => {
+    const active = themeWorkspace.active;
+    if (!active) return;
+    const blob = new Blob([serializeVisualTheme(active)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${safeFilename(active.name)}.wxmd-theme.json`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    notify('主题文件已导出');
+  };
+
+  const importTheme = async (file: File) => {
+    if (file.size > 100_000) {
+      notify('主题文件不能超过 100 KB', 'error');
+      return;
+    }
+    if (themeWorkspace.savedThemes.length >= MAX_SAVED_VISUAL_THEMES) {
+      notify(`最多保存 ${MAX_SAVED_VISUAL_THEMES} 个自定义主题`, 'error');
+      return;
+    }
+
+    try {
+      const imported = parseImportedVisualTheme(await file.text());
+      const now = new Date().toISOString();
+      const savedTheme: SavedVisualTheme = {
+        ...imported,
+        id: crypto.randomUUID(),
+        createdAt: now,
+        updatedAt: now,
+      };
+      setThemeWorkspace((current) => ({
+        ...current,
+        themeId: savedTheme.baseThemeId,
+        active: {
+          baseThemeId: savedTheme.baseThemeId,
+          name: savedTheme.name,
+          savedId: savedTheme.id,
+          settings: { ...savedTheme.settings },
+        },
+        savedThemes: [savedTheme, ...current.savedThemes],
+      }));
+      notify('主题已导入');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : '主题导入失败', 'error');
+    }
+  };
+
   return (
     <>
       <Toast toast={toast} />
-      <aside className="preview-pane flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--ui-app-bg)]">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-4">
+      <aside className="preview-pane flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#ebe9e3]">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--ui-line)] bg-[rgba(255,254,250,0.94)] px-4 backdrop-blur">
           <div className="flex min-w-0 items-center gap-2.5">
-            <FileCode2 size={18} className="shrink-0 text-[var(--ui-text-secondary)]" />
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[var(--ui-status-success-soft)] text-[var(--ui-status-success)]">
+              <FileCode2 size={15} strokeWidth={1.9} />
+            </span>
             <div className="min-w-0">
-              <h2 className="m-0 truncate text-sm font-semibold text-[var(--ui-text)]">微信排版预览</h2>
-              <div className="truncate text-xs text-[var(--ui-muted)]">内容实时同步</div>
+              <h2 className="m-0 truncate text-[13px] font-semibold tracking-[-0.01em] text-[var(--ui-text)]">微信预览</h2>
+              <div className="truncate text-[11px] text-[var(--ui-muted)]">内容实时同步</div>
             </div>
           </div>
 
-          <div
-            className="flex shrink-0 items-center rounded-lg border border-[var(--ui-line)] bg-[var(--ui-subtle)] p-1"
-            aria-label="预览设备"
-          >
-            <DeviceButton
-              active={previewMode === 'desktop'}
-              label="桌面预览"
-              icon={<Monitor size={15} />}
-              onClick={() => setPreviewMode('desktop')}
-            />
-            <DeviceButton
-              active={previewMode === 'mobile'}
-              label="手机预览"
-              icon={<Smartphone size={15} />}
-              onClick={() => setPreviewMode('mobile')}
-            />
+          <div className="flex shrink-0 items-center gap-2">
+            <div
+              className="flex shrink-0 items-center rounded-[9px] border border-[var(--ui-line)] bg-[var(--ui-subtle)] p-1"
+              aria-label="预览设备"
+            >
+              <DeviceButton
+                active={previewMode === 'desktop'}
+                label="桌面预览"
+                icon={<Monitor size={15} />}
+                onClick={() => setPreviewMode('desktop')}
+              />
+              <DeviceButton
+                active={previewMode === 'mobile'}
+                label="手机预览"
+                icon={<Smartphone size={15} />}
+                onClick={() => setPreviewMode('mobile')}
+              />
+            </div>
+            {onClose ? (
+              <button
+                className="preview-pane-close ui-pressable"
+                type="button"
+                aria-label="关闭预览"
+                title="关闭预览"
+                onClick={onClose}
+              >
+                <X size={16} />
+              </button>
+            ) : null}
           </div>
         </header>
 
-        <section className="preview-toolbar grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-4 py-3">
+        <section className="preview-toolbar grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-4 py-2.5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <div className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[var(--ui-text-secondary)]">
+            <div className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ui-text-muted)]">
               <Palette size={14} />
               主题
             </div>
             <div className="preview-theme-list flex min-w-0 gap-1.5 overflow-x-auto">
               {wechatThemes.map((themeOption) => {
-                const active = themeOption.id === themeId;
+                const active = !themeWorkspace.active && themeOption.id === themeWorkspace.themeId;
 
                 return (
                   <button
                     key={themeOption.id}
-                    className={`flex h-8 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs transition-colors ${
+                    className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
                       active
                         ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
                         : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
@@ -131,7 +335,7 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
                     type="button"
                     title={themeOption.description}
                     aria-pressed={active}
-                    onClick={() => setThemeId(themeOption.id)}
+                    onClick={() => selectBuiltinTheme(themeOption.id)}
                   >
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10"
@@ -143,7 +347,45 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
                   </button>
                 );
               })}
+              {themeWorkspace.savedThemes.map((savedTheme) => {
+                const active = themeWorkspace.active?.savedId === savedTheme.id;
+                return (
+                  <button
+                    key={savedTheme.id}
+                    className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
+                      active
+                        ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
+                        : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
+                    }`}
+                    type="button"
+                    aria-pressed={active}
+                    title={savedTheme.name}
+                    onClick={() => selectSavedTheme(savedTheme)}
+                  >
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10" style={{ backgroundColor: savedTheme.settings.accentColor }} />
+                    <span className="max-w-24 truncate">{savedTheme.name}</span>
+                    <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
+                  </button>
+                );
+              })}
+              {themeWorkspace.active && activeThemeDirty ? (
+                <span className="preview-unsaved-theme">
+                  <span style={{ backgroundColor: themeWorkspace.active.settings.accentColor }} />
+                  {themeWorkspace.active.savedId ? '有更改' : '未保存'}
+                </span>
+              ) : null}
             </div>
+            <button
+              className={`preview-theme-editor-trigger ${themeEditorOpen ? 'is-active' : ''}`}
+              type="button"
+              aria-controls="visual-theme-editor"
+              aria-expanded={themeEditorOpen}
+              aria-label="编辑主题"
+              title="编辑主题"
+              onClick={openThemeEditor}
+            >
+              <SlidersHorizontal size={15} />
+            </button>
           </div>
           <div className="preview-actions flex max-w-full shrink-0 items-center justify-end gap-2">
             <ActionButton
@@ -159,19 +401,38 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
             />
             <ActionButton
               icon={<Send size={15} />}
-              label="发布预演"
+              label="一键发布"
               onClick={() => setPublishOpen(true)}
             />
           </div>
         </section>
 
-        <div className="preview-stage min-h-0 flex-1 overflow-auto p-5">
+        {themeEditorOpen && themeWorkspace.active ? (
+          <VisualThemeEditor
+            active={themeWorkspace.active}
+            savedCount={themeWorkspace.savedThemes.length}
+            saving={savingTheme}
+            onBaseChange={changeBaseTheme}
+            onChange={updateActiveSettings}
+            onClose={() => setThemeEditorOpen(false)}
+            onDelete={themeWorkspace.active.savedId ? deleteActiveTheme : undefined}
+            onExport={exportActiveTheme}
+            onImport={importTheme}
+            onNameChange={(name) => setThemeWorkspace((current) => current.active
+              ? { ...current, active: { ...current.active, name } }
+              : current)}
+            onReset={() => updateActiveSettings(createDefaultVisualThemeSettings(themeWorkspace.active?.baseThemeId ?? defaultWechatThemeId))}
+            onSave={saveActiveTheme}
+          />
+        ) : null}
+
+        <div className="preview-stage min-h-0 flex-1 overflow-auto p-5 lg:p-6">
           <div
-            className={`preview-paper mx-auto overflow-hidden bg-[var(--ui-surface)] transition-[width] duration-200 ${
+            className={`preview-paper mx-auto overflow-hidden bg-[var(--ui-surface)] ${
               previewMode === 'mobile' ? 'preview-paper-mobile' : 'preview-paper-desktop'
             }`}
           >
-            <div className="preview-paper-bar flex h-10 items-center justify-between border-b border-[var(--ui-line)] bg-[var(--ui-subtle)] px-3 text-xs text-[var(--ui-muted)]">
+            <div className="preview-paper-bar flex h-10 items-center justify-between border-b border-[var(--ui-line)] bg-[#faf9f5] px-3 text-[11px] text-[var(--ui-muted)]">
               <span className="flex items-center gap-1.5 font-medium text-[var(--ui-text-secondary)]">
                 <FileCode2 size={13} />
                 文章预览
@@ -189,6 +450,7 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
         </div>
       </aside>
       <PublishModal
+        content={publishHtml}
         doc={doc}
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
@@ -196,6 +458,10 @@ export function WeChatPreview({ doc }: WeChatPreviewProps) {
       />
     </>
   );
+}
+
+function safeFilename(value: string) {
+  return value.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').slice(0, 60) || 'wxmd-theme';
 }
 
 function DeviceButton({
@@ -211,7 +477,7 @@ function DeviceButton({
 }) {
   return (
     <button
-      className={`grid h-7 w-8 place-items-center rounded-md transition-colors ${
+      className={`ui-pressable ui-icon-button h-7 w-8 ${
         active
           ? 'bg-[var(--ui-surface)] text-[var(--ui-text)] shadow-[var(--ui-shadow-xs)]'
           : 'text-[var(--ui-muted)] hover:text-[var(--ui-text)]'
@@ -240,7 +506,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors ${
+      className={`ui-pressable flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-[9px] border px-3 text-xs font-medium ${
         primary
           ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)] text-white hover:border-[var(--ui-accent-hover)] hover:bg-[var(--ui-accent-hover)]'
           : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'

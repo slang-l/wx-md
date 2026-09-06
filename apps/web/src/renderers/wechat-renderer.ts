@@ -1,7 +1,12 @@
 import type { AppDoc, InlineTextDelta, NormalizedBlock } from '../types/document';
 import { escapeHtml } from '../utils/escape';
 import { formatDateTime } from '../utils/date';
-import { defaultWechatThemeId, getWechatTheme, type WechatTheme } from './wechat-themes';
+import {
+  defaultWechatThemeId,
+  getWechatTheme,
+  type WechatTheme,
+  type WechatThemeId,
+} from './wechat-themes';
 
 const BLOCKSUITE_INLINE_COLORS: Readonly<Record<string, string>> = {
   'var(--affine-text-highlight-red)': 'rgba(254, 213, 213, 1)',
@@ -22,22 +27,34 @@ const BLOCKSUITE_INLINE_COLORS: Readonly<Record<string, string>> = {
   'var(--affine-text-highlight-foreground-grey)': 'rgba(68, 77, 89, 1)',
 };
 
-export function renderWechatHtml(doc: AppDoc, themeId = defaultWechatThemeId) {
-  const theme = getWechatTheme(themeId);
+interface RenderWechatHtmlOptions {
+  includePreviewFooter?: boolean;
+}
+
+export function renderWechatHtml(
+  doc: AppDoc,
+  themeInput: WechatThemeId | WechatTheme = defaultWechatThemeId,
+  options: RenderWechatHtmlOptions = {},
+) {
+  const theme = typeof themeInput === 'string' ? getWechatTheme(themeInput) : themeInput;
   const bodyBlocks = skipDuplicatedTitle(doc);
   const blocksHtml = bodyBlocks.map((block) => renderWechatBlock(block, theme)).join('\n');
+
+  const previewFooter = options.includePreviewFooter === false
+    ? ''
+    : `<footer style="${theme.styles.footer}">
+    <span>阅读 1234</span>
+    <span>分享</span>
+    <span>赞 56</span>
+    <span>在看 18</span>
+  </footer>`;
 
   return `
 <section id="output" class="wxmd wxmd-${theme.id}" style="${theme.styles.container}">
   <h1 style="${theme.styles.title}">${escapeHtml(doc.title)}</h1>
   ${renderMeta(doc, theme)}
   ${blocksHtml}
-  <footer style="${theme.styles.footer}">
-    <span>阅读 1234</span>
-    <span>分享</span>
-    <span>赞 56</span>
-    <span>在看 18</span>
-  </footer>
+  ${previewFooter}
 </section>`.trim();
 }
 

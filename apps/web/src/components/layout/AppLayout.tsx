@@ -1,42 +1,49 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { FileText, LogOut, PanelRight, PenLine, Settings2 } from 'lucide-react';
+import {
+  Images,
+  LibraryBig,
+  LogOut,
+  Menu,
+  Moon,
+  MoreHorizontal,
+  PanelRight,
+  Plus,
+  Settings,
+  Sun,
+} from 'lucide-react';
+import type { AuthUser } from '../../services/auth-api';
+import { useDocsStore } from '../../store/docsStore';
 import { EditorColumn } from '../editor/EditorColumn';
+import { WeChatPreview } from '../preview/WeChatPreview';
 import { SettingsModal } from '../settings';
 import { DocumentSidebar } from '../sidebar/DocumentSidebar';
-import { useDocsStore } from '../../store/docsStore';
-import { WeChatPreview } from '../preview/WeChatPreview';
-import type { AuthUser } from '../../services/auth-api';
 
-type ResizeEdge = 'left-editor' | 'editor-preview';
-type CompactPane = 'documents' | 'editor' | 'preview';
+type ResizeEdge = 'sidebar' | 'preview';
 
 interface PanelWidths {
-  left: number;
-  editor: number;
+  sidebar: number;
   preview: number;
 }
 
-const HANDLE_WIDTH = 8;
-const KEYBOARD_RESIZE_STEP = 24;
-const MIN_WIDTHS: PanelWidths = {
-  left: 232,
-  editor: 480,
-  preview: 360,
-};
-const DEFAULT_WIDTHS: PanelWidths = {
-  left: 248,
-  editor: 720,
-  preview: 480,
-};
-const COMPACT_LAYOUT_QUERY = '(max-width: 1099px)';
+const SIDEBAR_WIDTH_STORAGE_KEY = 'block-notes-sidebar-width-v1';
+const PREVIEW_WIDTH_STORAGE_KEY = 'block-notes-preview-width-v1';
+const THREE_PANE_QUERY = '(min-width: 1001px)';
+const RESIZE_HANDLE_WIDTH = 8;
+const KEYBOARD_RESIZE_STEP = 20;
+const MIN_EDITOR_WIDTH = 420;
+const MIN_SIDEBAR_WIDTH = 220;
+const MAX_SIDEBAR_WIDTH = 420;
+const MIN_PREVIEW_WIDTH = 320;
+const MAX_PREVIEW_WIDTH = 760;
+const DEFAULT_SIDEBAR_WIDTH = 264;
+const DEFAULT_PREVIEW_WIDTH = 480;
 
 interface AppLayoutProps {
   isSigningOut: boolean;
@@ -48,41 +55,78 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
   const docs = useDocsStore((state) => state.docs);
   const currentDocId = useDocsStore((state) => state.currentDocId);
   const currentDoc = docs.find((doc) => doc.id === currentDocId) ?? docs[0];
-  const layoutRef = useRef<HTMLElement>(null);
+  const createDoc = useDocsStore((state) => state.createDoc);
+  const shellRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<{
     edge: ResizeEdge;
     pointerId: number;
     startX: number;
     startWidths: PanelWidths;
   } | null>(null);
-  const [activeResize, setActiveResize] = useState<ResizeEdge | null>(null);
-  const [compactPane, setCompactPane] = useState<CompactPane>('editor');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [componentLibraryOpen, setComponentLibraryOpen] = useState(false);
+  const [brandAssetLibraryOpen, setBrandAssetLibraryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [isCompactLayout, setIsCompactLayout] = useState(() =>
-    typeof window === 'undefined' ? false : window.matchMedia(COMPACT_LAYOUT_QUERY).matches,
-  );
-  const [panelWidths, setPanelWidths] = useState<PanelWidths>(() =>
-    fitPanelWidths(DEFAULT_WIDTHS, getAvailablePanelWidth(null)),
-  );
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [activeResize, setActiveResize] = useState<ResizeEdge | null>(null);
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>(() => ({
+    sidebar: clamp(
+      readStoredWidth(SIDEBAR_WIDTH_STORAGE_KEY, DEFAULT_SIDEBAR_WIDTH),
+      MIN_SIDEBAR_WIDTH,
+      MAX_SIDEBAR_WIDTH,
+    ),
+    preview: clamp(
+      readStoredWidth(PREVIEW_WIDTH_STORAGE_KEY, DEFAULT_PREVIEW_WIDTH),
+      MIN_PREVIEW_WIDTH,
+      MAX_PREVIEW_WIDTH,
+    ),
+  }));
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(COMPACT_LAYOUT_QUERY);
-    const syncLayoutMode = () => setIsCompactLayout(mediaQuery.matches);
+    if (!accountMenuOpen) return undefined;
 
-    syncLayoutMode();
-    mediaQuery.addEventListener('change', syncLayoutMode);
-    return () => mediaQuery.removeEventListener('change', syncLayoutMode);
-  }, []);
-
-  useEffect(() => {
-    const syncPanelWidths = () => {
-      setPanelWidths((currentWidths) => fitPanelWidths(currentWidths, getAvailablePanelWidth(layoutRef.current)));
+    const closeMenu = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
     };
 
-    syncPanelWidths();
-    window.addEventListener('resize', syncPanelWidths);
-    return () => window.removeEventListener('resize', syncPanelWidths);
+    window.addEventListener('mousedown', closeMenu);
+    return () => window.removeEventListener('mousedown', closeMenu);
+  }, [accountMenuOpen]);
+
+  useEffect(() => {
+    const closeOverlay = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setComponentLibraryOpen(false);
+      setBrandAssetLibraryOpen(false);
+      setAccountMenuOpen(false);
+    };
+
+    window.addEventListener('keydown', closeOverlay);
+    return () => window.removeEventListener('keydown', closeOverlay);
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(Math.round(panelWidths.sidebar)));
+    window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, String(Math.round(panelWidths.preview)));
+  }, [panelWidths]);
+
+  useEffect(() => {
+    const fitPanelsToViewport = () => {
+      if (!window.matchMedia(THREE_PANE_QUERY).matches) return;
+
+      const availableWidth = shellRef.current?.clientWidth ?? window.innerWidth;
+      setPanelWidths((current) => fitPanelWidths(current, availableWidth, sidebarOpen, previewOpen));
+    };
+
+    fitPanelsToViewport();
+    window.addEventListener('resize', fitPanelsToViewport);
+    return () => window.removeEventListener('resize', fitPanelsToViewport);
+  }, [previewOpen, sidebarOpen]);
 
   useEffect(() => {
     if (!activeResize) return undefined;
@@ -98,27 +142,45 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
     };
   }, [activeResize]);
 
-  const resizeByDelta = useCallback((edge: ResizeEdge, startWidths: PanelWidths, delta: number): PanelWidths => {
-    if (edge === 'left-editor') {
-      const combinedWidth = startWidths.left + startWidths.editor;
-      const left = clamp(startWidths.left + delta, MIN_WIDTHS.left, combinedWidth - MIN_WIDTHS.editor);
+  const resizeByDelta = useCallback(
+    (edge: ResizeEdge, startWidths: PanelWidths, delta: number): PanelWidths => {
+      const availableWidth = shellRef.current?.clientWidth ?? window.innerWidth;
+
+      if (edge === 'sidebar') {
+        const previewSpace =
+          previewOpen && window.matchMedia(THREE_PANE_QUERY).matches
+            ? startWidths.preview + RESIZE_HANDLE_WIDTH
+            : 0;
+        const maxWidth = Math.max(
+          MIN_SIDEBAR_WIDTH,
+          Math.min(
+            MAX_SIDEBAR_WIDTH,
+            availableWidth - MIN_EDITOR_WIDTH - previewSpace - RESIZE_HANDLE_WIDTH,
+          ),
+        );
+
+        return {
+          ...startWidths,
+          sidebar: clamp(startWidths.sidebar + delta, MIN_SIDEBAR_WIDTH, maxWidth),
+        };
+      }
+
+      const sidebarSpace = sidebarOpen ? startWidths.sidebar + RESIZE_HANDLE_WIDTH : 0;
+      const maxWidth = Math.max(
+        MIN_PREVIEW_WIDTH,
+        Math.min(
+          MAX_PREVIEW_WIDTH,
+          availableWidth - MIN_EDITOR_WIDTH - sidebarSpace - RESIZE_HANDLE_WIDTH,
+        ),
+      );
 
       return {
         ...startWidths,
-        left,
-        editor: combinedWidth - left,
+        preview: clamp(startWidths.preview - delta, MIN_PREVIEW_WIDTH, maxWidth),
       };
-    }
-
-    const combinedWidth = startWidths.editor + startWidths.preview;
-    const editor = clamp(startWidths.editor + delta, MIN_WIDTHS.editor, combinedWidth - MIN_WIDTHS.preview);
-
-    return {
-      ...startWidths,
-      editor,
-      preview: combinedWidth - editor,
-    };
-  }, []);
+    },
+    [previewOpen, sidebarOpen],
+  );
 
   const beginResize = useCallback(
     (edge: ResizeEdge, event: PointerEvent<HTMLDivElement>) => {
@@ -164,151 +226,239 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
       const direction = event.key === 'ArrowRight' ? 1 : -1;
       const multiplier = event.shiftKey ? 4 : 1;
       event.preventDefault();
-      setPanelWidths((currentWidths) => resizeByDelta(edge, currentWidths, direction * KEYBOARD_RESIZE_STEP * multiplier));
+      setPanelWidths((current) =>
+        resizeByDelta(edge, current, direction * KEYBOARD_RESIZE_STEP * multiplier),
+      );
     },
     [resizeByDelta],
-  );
-
-  const gridTemplateColumns = useMemo(
-    () =>
-      `${panelWidths.left}px ${HANDLE_WIDTH}px ${panelWidths.editor}px ${HANDLE_WIDTH}px ${panelWidths.preview}px`,
-    [panelWidths],
   );
 
   if (!currentDoc) {
     return null;
   }
 
-  if (isCompactLayout) {
-    return (
-      <>
-        <main className="flex h-[100dvh] min-h-0 flex-col bg-[var(--ui-app-bg)] text-[var(--ui-text)]">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-3 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--ui-accent)] text-white">
-              <PenLine size={16} strokeWidth={1.8} />
-            </span>
-            <div className="hidden min-w-0 sm:block">
-              <div className="truncate text-sm font-semibold tracking-[-0.01em]">Block Notes</div>
-              <div className="truncate text-xs text-[var(--ui-muted)]">{user.name}</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <nav className="flex items-center gap-1 rounded-lg border border-[var(--ui-line)] bg-[var(--ui-subtle)] p-1" aria-label="工作区视图">
-              <CompactNavButton
-                active={compactPane === 'documents'}
-                icon={<FileText size={15} />}
-                label="文档"
-                onClick={() => setCompactPane('documents')}
-              />
-              <CompactNavButton
-                active={compactPane === 'editor'}
-                icon={<PenLine size={15} />}
-                label="编辑"
-                onClick={() => setCompactPane('editor')}
-              />
-              <CompactNavButton
-                active={compactPane === 'preview'}
-                icon={<PanelRight size={15} />}
-                label="预览"
-                onClick={() => setCompactPane('preview')}
-              />
-            </nav>
-            <button
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--ui-muted)] transition-colors hover:bg-[var(--ui-subtle)] hover:text-[var(--ui-text)]"
-              type="button"
-              aria-label="打开设置"
-              title="设置"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Settings2 size={16} strokeWidth={1.8} />
-            </button>
-            <button
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--ui-muted)] transition-colors hover:bg-[var(--ui-subtle)] hover:text-[var(--ui-status-danger)]"
-              type="button"
-              aria-label={isSigningOut ? '正在退出登录' : '退出登录'}
-              title={isSigningOut ? '正在退出登录' : '退出登录'}
-              disabled={isSigningOut}
-              onClick={onSignOut}
-            >
-              <LogOut size={16} strokeWidth={1.8} />
-            </button>
-          </div>
-        </header>
-
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden [&>*]:h-full [&>*]:w-full">
-          {compactPane === 'documents' ? (
-            <DocumentSidebar
-              docs={docs}
-              currentDocId={currentDoc.id}
-              isSigningOut={isSigningOut}
-              onDocumentOpen={() => setCompactPane('editor')}
-              onOpenSettings={() => setSettingsOpen(true)}
-              onSignOut={onSignOut}
-              user={user}
-            />
-          ) : null}
-          {compactPane === 'editor' ? <EditorColumn doc={currentDoc} /> : null}
-          {compactPane === 'preview' ? <WeChatPreview doc={currentDoc} /> : null}
-        </div>
-        </main>
-        <SettingsModal
-          appName="Block Notes"
-          appVersion="0.1.0"
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          onSignOut={onSignOut}
-          user={user}
-        />
-      </>
-    );
-  }
+  const displayTitle = currentDoc.title.trim() || 'Untitled';
+  const userInitials = getUserInitials(user);
 
   return (
     <>
       <main
-        ref={layoutRef}
-        className={`grid h-[100dvh] bg-[var(--ui-app-bg)] text-[var(--ui-text)] ${activeResize ? 'cursor-col-resize select-none' : ''}`}
-        style={{ gridTemplateColumns }}
+        ref={shellRef}
+        className={`workspace-shell ${darkMode ? 'workspace-dark' : ''} ${activeResize ? 'is-resizing' : ''}`}
       >
-        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
+        <button
+          className={`workspace-sidebar-backdrop ${sidebarOpen ? 'is-visible' : ''}`}
+          type="button"
+          aria-label="关闭侧边栏"
+          onClick={() => setSidebarOpen(false)}
+        />
+
+        <div
+          className={`workspace-sidebar-layer ${sidebarOpen ? 'is-open' : ''}`}
+          style={sidebarOpen ? { width: panelWidths.sidebar, minWidth: panelWidths.sidebar } : undefined}
+        >
           <DocumentSidebar
             currentDocId={currentDoc.id}
             docs={docs}
-            isSigningOut={isSigningOut}
+            onDocumentOpen={() => {
+              if (window.matchMedia('(max-width: 760px)').matches) setSidebarOpen(false);
+            }}
             onOpenSettings={() => setSettingsOpen(true)}
-            onSignOut={onSignOut}
-            user={user}
           />
         </div>
-        <ResizeHandle
-          active={activeResize === 'left-editor'}
-          edge="left-editor"
-          label="Resize sidebar and editor"
-          onKeyDown={resizeWithKeyboard}
-          onPointerCancel={endResize}
-          onPointerDown={beginResize}
-          onPointerMove={updateResize}
-          onPointerUp={endResize}
-        />
-        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
-          <EditorColumn doc={currentDoc} />
-        </div>
-        <ResizeHandle
-          active={activeResize === 'editor-preview'}
-          edge="editor-preview"
-          label="Resize editor and preview"
-          onKeyDown={resizeWithKeyboard}
-          onPointerCancel={endResize}
-          onPointerDown={beginResize}
-          onPointerMove={updateResize}
-          onPointerUp={endResize}
-        />
-        <div className="min-h-0 min-w-0 overflow-hidden [&>*]:h-full [&>*]:w-full">
-          <WeChatPreview doc={currentDoc} />
-        </div>
+
+        {sidebarOpen ? (
+          <ResizeHandle
+            active={activeResize === 'sidebar'}
+            edge="sidebar"
+            label="调整文档栏和编辑区宽度"
+            value={panelWidths.sidebar}
+            min={MIN_SIDEBAR_WIDTH}
+            max={MAX_SIDEBAR_WIDTH}
+            onKeyDown={resizeWithKeyboard}
+            onPointerCancel={endResize}
+            onPointerDown={beginResize}
+            onPointerMove={updateResize}
+            onPointerUp={endResize}
+          />
+        ) : null}
+
+        <section className="workspace-main">
+          <header className="workspace-topbar">
+            <div className="workspace-breadcrumb-wrap">
+              <button
+                className="workspace-icon-button"
+                type="button"
+                aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+                title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+                onClick={() => setSidebarOpen((open) => !open)}
+              >
+                <Menu size={18} strokeWidth={1.7} />
+              </button>
+              <nav className="workspace-breadcrumb" aria-label="面包屑导航">
+                <span>workspace</span>
+                <span aria-hidden="true">/</span>
+                <strong title={displayTitle}>{displayTitle}</strong>
+              </nav>
+            </div>
+
+            <div className="workspace-actions">
+              <button
+                className="workspace-component-button"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={componentLibraryOpen}
+                onClick={() => {
+                  setBrandAssetLibraryOpen(false);
+                  setComponentLibraryOpen(true);
+                }}
+              >
+                <LibraryBig size={15} />
+                <span>组件</span>
+              </button>
+              <button
+                className="workspace-component-button"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={brandAssetLibraryOpen}
+                onClick={() => {
+                  setComponentLibraryOpen(false);
+                  setBrandAssetLibraryOpen(true);
+                }}
+              >
+                <Images size={15} />
+                <span>素材</span>
+              </button>
+              <button
+                className="workspace-theme-button"
+                type="button"
+                aria-pressed={darkMode}
+                onClick={() => setDarkMode((active) => !active)}
+              >
+                {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+                <span>{darkMode ? 'light' : 'dark'}</span>
+              </button>
+              <button
+                className={`workspace-preview-button ${previewOpen ? 'is-active' : ''}`}
+                type="button"
+                aria-controls="workspace-preview-pane"
+                aria-expanded={previewOpen}
+                onClick={() => setPreviewOpen((open) => !open)}
+              >
+                <PanelRight size={15} />
+                <span>预览</span>
+              </button>
+
+              <div ref={menuRef} className="workspace-account-menu-wrap">
+                <button
+                  className="workspace-icon-button"
+                  type="button"
+                  aria-label="更多操作"
+                  aria-expanded={accountMenuOpen}
+                  onClick={() => setAccountMenuOpen((open) => !open)}
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+                <button
+                  className="workspace-avatar"
+                  type="button"
+                  aria-label={`${user.name} 的账户菜单`}
+                  aria-expanded={accountMenuOpen}
+                  onClick={() => setAccountMenuOpen((open) => !open)}
+                >
+                  {userInitials}
+                </button>
+
+                {accountMenuOpen ? (
+                  <div className="workspace-account-menu" role="menu">
+                    <div className="workspace-account-summary">
+                      <span className="workspace-account-avatar">{userInitials}</span>
+                      <span>
+                        <strong>{user.name}</strong>
+                        <small>{user.email}</small>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        createDoc();
+                        setAccountMenuOpen(false);
+                      }}
+                    >
+                      <Plus size={15} />
+                      New page
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setSettingsOpen(true);
+                        setAccountMenuOpen(false);
+                      }}
+                    >
+                      <Settings size={15} />
+                      Settings
+                    </button>
+                    <button
+                      className="is-danger"
+                      type="button"
+                      role="menuitem"
+                      disabled={isSigningOut}
+                      onClick={onSignOut}
+                    >
+                      <LogOut size={15} />
+                      {isSigningOut ? 'Signing out…' : 'Sign out'}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </header>
+
+          <div className="workspace-content">
+            <div className="workspace-editor-area">
+              <EditorColumn
+                brandAssetLibraryOpen={brandAssetLibraryOpen}
+                componentLibraryOpen={componentLibraryOpen}
+                doc={currentDoc}
+                onBrandAssetLibraryOpenChange={setBrandAssetLibraryOpen}
+                onComponentLibraryOpenChange={setComponentLibraryOpen}
+              />
+              <button className="workspace-help-button" type="button" aria-label="帮助" title="帮助">
+                ?
+              </button>
+            </div>
+
+            {previewOpen ? (
+              <>
+                <ResizeHandle
+                  active={activeResize === 'preview'}
+                  edge="preview"
+                  label="调整编辑区和预览区宽度"
+                  value={panelWidths.preview}
+                  min={MIN_PREVIEW_WIDTH}
+                  max={MAX_PREVIEW_WIDTH}
+                  onKeyDown={resizeWithKeyboard}
+                  onPointerCancel={endResize}
+                  onPointerDown={beginResize}
+                  onPointerMove={updateResize}
+                  onPointerUp={endResize}
+                />
+                <section
+                  id="workspace-preview-pane"
+                  className="workspace-preview-pane"
+                  aria-label="文章分享预览"
+                  style={{ width: panelWidths.preview, flexBasis: panelWidths.preview }}
+                >
+                  <WeChatPreview doc={currentDoc} userId={user.id} onClose={() => setPreviewOpen(false)} />
+                </section>
+              </>
+            ) : null}
+          </div>
+        </section>
       </main>
+
       <SettingsModal
         appName="Block Notes"
         appVersion="0.1.0"
@@ -325,6 +475,9 @@ interface ResizeHandleProps {
   active: boolean;
   edge: ResizeEdge;
   label: string;
+  value: number;
+  min: number;
+  max: number;
   onKeyDown: (edge: ResizeEdge, event: KeyboardEvent<HTMLDivElement>) => void;
   onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void;
   onPointerDown: (edge: ResizeEdge, event: PointerEvent<HTMLDivElement>) => void;
@@ -336,6 +489,9 @@ function ResizeHandle({
   active,
   edge,
   label,
+  value,
+  min,
+  max,
   onKeyDown,
   onPointerCancel,
   onPointerDown,
@@ -344,90 +500,68 @@ function ResizeHandle({
 }: ResizeHandleProps) {
   return (
     <div
-      className="group relative z-10 h-full cursor-col-resize bg-[var(--ui-app-bg)] outline-none"
+      className={`workspace-resize-handle workspace-${edge}-resizer ${active ? 'is-active' : ''}`}
       role="separator"
       aria-label={label}
       aria-orientation="vertical"
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={Math.round(value)}
       tabIndex={0}
       onKeyDown={(event) => onKeyDown(edge, event)}
       onPointerCancel={onPointerCancel}
       onPointerDown={(event) => onPointerDown(edge, event)}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-    >
-      <span
-        className={`absolute inset-y-0 left-1/2 w-px -translate-x-1/2 transition-colors ${
-          active ? 'bg-[var(--ui-accent)]' : 'bg-[var(--ui-line-strong)] group-hover:bg-[var(--ui-muted)]'
-        }`}
-        aria-hidden="true"
-      />
-      <span
-        className={`absolute left-1/2 top-1/2 h-10 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-sm border border-[var(--ui-surface)] transition-colors ${
-          active ? 'bg-[var(--ui-accent)]' : 'bg-transparent group-hover:bg-[var(--ui-muted)]'
-        }`}
-        aria-hidden="true"
-      />
-    </div>
+    />
   );
 }
 
-function CompactNavButton({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors ${
-        active
-          ? 'bg-[var(--ui-surface)] text-[var(--ui-text)] shadow-[var(--ui-shadow-xs)]'
-          : 'text-[var(--ui-muted)] hover:text-[var(--ui-text)]'
-      }`}
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {icon}
-      <span className="hidden min-[480px]:inline">{label}</span>
-    </button>
-  );
+function readStoredWidth(key: string, fallback: number) {
+  if (typeof window === 'undefined') return fallback;
+
+  const storedValue = Number(window.localStorage.getItem(key));
+  return Number.isFinite(storedValue) && storedValue > 0 ? storedValue : fallback;
 }
 
-function getAvailablePanelWidth(container: HTMLElement | null) {
-  const measuredWidth = container?.getBoundingClientRect().width ?? getFallbackLayoutWidth();
-  return Math.max(measuredWidth - HANDLE_WIDTH * 2, getMinimumPanelWidth());
-}
+function fitPanelWidths(
+  widths: PanelWidths,
+  availableWidth: number,
+  sidebarOpen: boolean,
+  previewOpen: boolean,
+): PanelWidths {
+  let sidebar = clamp(widths.sidebar, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
+  let preview = clamp(widths.preview, MIN_PREVIEW_WIDTH, MAX_PREVIEW_WIDTH);
+  const handleWidth = Number(sidebarOpen) * RESIZE_HANDLE_WIDTH + Number(previewOpen) * RESIZE_HANDLE_WIDTH;
+  const sidePanelBudget = Math.max(0, availableWidth - MIN_EDITOR_WIDTH - handleWidth);
 
-function getFallbackLayoutWidth() {
-  if (typeof window === 'undefined') {
-    return DEFAULT_WIDTHS.left + DEFAULT_WIDTHS.editor + DEFAULT_WIDTHS.preview + HANDLE_WIDTH * 2;
+  if (sidebarOpen && previewOpen && sidebar + preview > sidePanelBudget) {
+    preview = Math.max(MIN_PREVIEW_WIDTH, sidePanelBudget - sidebar);
+    sidebar = Math.max(MIN_SIDEBAR_WIDTH, sidePanelBudget - preview);
+  } else if (sidebarOpen && sidebar > sidePanelBudget) {
+    sidebar = Math.max(MIN_SIDEBAR_WIDTH, sidePanelBudget);
+  } else if (previewOpen && preview > sidePanelBudget) {
+    preview = Math.max(MIN_PREVIEW_WIDTH, sidePanelBudget);
   }
 
-  return window.innerWidth;
-}
-
-function getMinimumPanelWidth() {
-  return MIN_WIDTHS.left + MIN_WIDTHS.editor + MIN_WIDTHS.preview;
-}
-
-function fitPanelWidths(widths: PanelWidths, availableWidth: number): PanelWidths {
-  const safeAvailableWidth = Math.max(availableWidth, getMinimumPanelWidth());
-  const left = clamp(widths.left, MIN_WIDTHS.left, safeAvailableWidth - MIN_WIDTHS.editor - MIN_WIDTHS.preview);
-  const preview = clamp(widths.preview, MIN_WIDTHS.preview, safeAvailableWidth - left - MIN_WIDTHS.editor);
-
-  return {
-    left,
-    editor: safeAvailableWidth - left - preview,
-    preview,
-  };
+  return { sidebar, preview };
 }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getUserInitials(user: AuthUser): string {
+  const displayName = user.name.trim() || user.email.split('@')[0] || 'U';
+  const words = displayName.split(/\s+/).filter(Boolean);
+
+  if (words.length > 1) {
+    return words
+      .slice(0, 2)
+      .map((word) => Array.from(word)[0])
+      .join('')
+      .toUpperCase();
+  }
+
+  return Array.from(displayName).slice(0, 2).join('').toUpperCase();
 }

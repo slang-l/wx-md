@@ -371,7 +371,7 @@ authenticatedRequest('/api/auth/me')
 | `NODE_ENV` | `development` | 只允许 `development`、`test`、`production` |
 | `HOST` | `0.0.0.0` | API 监听地址 |
 | `PORT` | `3000` | 1～65535 的整数 |
-| `CORS_ORIGINS` | `http://localhost:5173` | 显式 Origin 列表，逗号分隔；启用凭据时禁止 `*` |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 显式 Origin 列表，逗号分隔；启用凭据时禁止 `*` |
 | `DATABASE_URL` | `postgresql://wxmd:wxmd@localhost:5432/wxmd` | 必填的 PostgreSQL URL |
 | `JWT_ACCESS_SECRET` | 无安全默认值 | 必填，至少 32 个字符；兼容旧变量名 `JWT_SECRET` |
 | `JWT_ISSUER` | `wx-md-api` | 必填，必须与 Token 验证端一致 |

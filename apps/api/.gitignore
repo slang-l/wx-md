@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build and test outputs
+dist/
+build/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# This project uses the pnpm lockfile at the workspace root
+package-lock.json
+npm-shrinkwrap.json
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.*.example
+!.env.*.sample
+*.pem
+*.key
+
+# Runtime data
+data/
+uploads/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+
+# Logs and temporary files
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.history/
+.DS_Store
+Thumbs.db
+Desktop.ini

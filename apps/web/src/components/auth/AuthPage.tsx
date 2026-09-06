@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import {
   ArrowRight,
   Check,
@@ -9,12 +9,14 @@ import {
   LockKeyhole,
   Mail,
   PenLine,
+  ShieldCheck,
   Smartphone,
 } from 'lucide-react';
 import {
   AuthApiError,
   login,
   register,
+  requestRegistrationVerificationCode,
   type AuthUser,
 } from '../../services/auth-api';
 
@@ -28,12 +30,14 @@ interface AuthFormState {
   email: string;
   password: string;
   confirmPassword: string;
+  verificationCode: string;
 }
 
 const EMPTY_FORM: AuthFormState = {
   email: '',
   password: '',
   confirmPassword: '',
+  verificationCode: '',
 };
 
 const MAX_EMAIL_LENGTH = 254;
@@ -43,25 +47,69 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   const emailId = useId();
   const passwordId = useId();
   const confirmPasswordId = useId();
+  const verificationCodeId = useId();
   const [mode, setMode] = useState<AuthMode>('login');
   const [form, setForm] = useState<AuthFormState>(EMPTY_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const [testCode, setTestCode] = useState('');
 
   const isLogin = mode === 'login';
 
+  useEffect(() => {
+    if (resendSeconds <= 0) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setResendSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1_000);
+
+    return () => window.clearTimeout(timer);
+  }, [resendSeconds]);
+
   const switchMode = (nextMode: AuthMode) => {
-    if (isSubmitting) return;
+    if (isSubmitting || isRequestingCode) return;
     setMode(nextMode);
     setForm(EMPTY_FORM);
     setShowPassword(false);
+    setResendSeconds(0);
+    setTestCode('');
     setError('');
   };
 
   const updateField = (field: keyof AuthFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+    if (field === 'email') {
+      setResendSeconds(0);
+      setTestCode('');
+    }
     if (error) setError('');
+  };
+
+  const handleRequestVerificationCode = async () => {
+    if (isRequestingCode || resendSeconds > 0) return;
+
+    const email = form.email.trim();
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    setIsRequestingCode(true);
+    setError('');
+
+    try {
+      const result = await requestRegistrationVerificationCode(email);
+      setResendSeconds(result.resendAfterSeconds);
+      setTestCode(result.testCode ?? '');
+    } catch (requestError) {
+      setError(getVerificationRequestErrorMessage(requestError));
+    } finally {
+      setIsRequestingCode(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -69,13 +117,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
     if (isSubmitting) return;
 
     const email = form.email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('请输入有效的邮箱地址');
-      return;
-    }
-
-    if (email.length > MAX_EMAIL_LENGTH) {
-      setError(`邮箱地址不能超过 ${MAX_EMAIL_LENGTH} 个字符`);
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
       return;
     }
 
@@ -103,12 +147,22 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       return;
     }
 
+    if (!isLogin && !/^\d{6}$/.test(form.verificationCode)) {
+      setError('请输入 6 位邮箱验证码');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
     try {
-      const authenticate = isLogin ? login : register;
-      const user = await authenticate({ email, password: form.password });
+      const user = isLogin
+        ? await login({ email, password: form.password })
+        : await register({
+          email,
+          password: form.password,
+          verificationCode: form.verificationCode,
+        });
       await onAuthenticated(user);
     } catch (submitError) {
       setError(getAuthErrorMessage(submitError, isLogin));
@@ -120,31 +174,34 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   return (
     <main className="auth-page relative min-h-[100dvh] overflow-x-hidden bg-[var(--ui-background)] text-[var(--ui-text)]">
       <div className="auth-page-grid pointer-events-none absolute inset-0" aria-hidden="true" />
-      <div className="pointer-events-none absolute -left-40 top-1/3 h-80 w-80 rounded-full bg-[var(--ui-primary-soft)] blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -left-32 top-[28%] h-72 w-72 rounded-full bg-[var(--ui-primary-soft)] opacity-80 blur-3xl" aria-hidden="true" />
 
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1240px] flex-col px-5 py-6 sm:px-8 lg:px-12 lg:py-8">
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1220px] flex-col px-5 py-5 sm:px-8 lg:px-10 lg:py-7">
         <header className="flex items-center justify-between">
           <a className="flex items-center gap-2.5 text-[var(--ui-text)] no-underline" href="/" aria-label="Block Notes 首页">
-            <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--ui-primary)] text-white shadow-[0_6px_16px_rgba(79,103,232,0.22)]">
+            <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[#292722] text-[#fffefa] shadow-[0_8px_18px_rgba(35,33,28,0.16)]">
               <PenLine size={18} strokeWidth={1.9} />
             </span>
-            <span className="text-[15px] font-semibold tracking-[-0.015em]">Block Notes</span>
+            <span className="text-[15px] font-semibold tracking-[-0.02em]">Block Notes</span>
           </a>
-          <span className="hidden text-xs text-[var(--ui-text-muted)] sm:block">为公众号创作者而生</span>
+          <span className="hidden items-center gap-2 text-xs font-medium text-[var(--ui-text-muted)] sm:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--ui-status-success)]" />
+            专注公众号创作
+          </span>
         </header>
 
-        <div className="grid flex-1 grid-cols-[minmax(0,1fr)] items-center gap-12 py-10 lg:grid-cols-[minmax(0,1.08fr)_440px] lg:gap-16 lg:py-12">
+        <div className="grid flex-1 grid-cols-[minmax(0,1fr)] items-center gap-12 py-8 lg:grid-cols-[minmax(0,1.12fr)_420px] lg:gap-20 lg:py-10">
           <ProductStory />
 
           <section
-            className="mx-auto w-full min-w-0 max-w-[440px] rounded-2xl border border-[var(--ui-border)] bg-[rgba(255,255,255,0.94)] p-6 shadow-[0_18px_60px_rgba(31,40,55,0.09)] backdrop-blur sm:p-8"
+            className="auth-form-reveal mx-auto w-full min-w-0 max-w-[420px] rounded-[20px] border border-[var(--ui-border)] bg-[rgba(255,254,250,0.96)] p-6 shadow-[var(--ui-shadow-card)] backdrop-blur sm:p-8"
             aria-labelledby="auth-title"
           >
             <div className="mb-7">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ui-primary)]">
-                {isLogin ? 'Welcome back' : 'Join Block Notes'}
+              <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-[var(--ui-primary)]">
+                {isLogin ? '继续你的创作' : '建立你的创作空间'}
               </p>
-              <h1 id="auth-title" className="m-0 text-[28px] font-semibold tracking-[-0.035em] text-[var(--ui-text)]">
+              <h1 id="auth-title" className="m-0 text-[30px] font-semibold tracking-[-0.045em] text-[var(--ui-text)]">
                 {isLogin ? '欢迎回来' : '创建你的账号'}
               </h1>
               <p className="mb-0 mt-2 text-sm leading-6 text-[var(--ui-text-secondary)]">
@@ -152,13 +209,13 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               </p>
             </div>
 
-            <div className="mb-6 grid grid-cols-2 rounded-lg bg-[var(--ui-surface-subtle)] p-1" aria-label="登录或注册">
-              <ModeButton active={isLogin} disabled={isSubmitting} label="登录" onClick={() => switchMode('login')} />
-              <ModeButton active={!isLogin} disabled={isSubmitting} label="注册" onClick={() => switchMode('register')} />
+            <div className="mb-6 grid grid-cols-2 rounded-[10px] bg-[var(--ui-surface-subtle)] p-1" aria-label="登录或注册">
+              <ModeButton active={isLogin} disabled={isSubmitting || isRequestingCode} label="登录" onClick={() => switchMode('login')} />
+              <ModeButton active={!isLogin} disabled={isSubmitting || isRequestingCode} label="注册" onClick={() => switchMode('register')} />
             </div>
 
-            <form noValidate aria-busy={isSubmitting} onSubmit={handleSubmit}>
-              <fieldset className="m-0 space-y-4 border-0 p-0" disabled={isSubmitting}>
+            <form noValidate aria-busy={isSubmitting || isRequestingCode} onSubmit={handleSubmit}>
+              <fieldset className="m-0 space-y-4 border-0 p-0" disabled={isSubmitting || isRequestingCode}>
                 <FormField
                   autoComplete="email"
                   icon={<Mail size={16} />}
@@ -170,6 +227,18 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                   type="email"
                   value={form.email}
                 />
+
+                {!isLogin ? (
+                  <VerificationCodeField
+                    id={verificationCodeId}
+                    isRequesting={isRequestingCode}
+                    onChange={(value) => updateField('verificationCode', value.replace(/\D/g, '').slice(0, 6))}
+                    onRequest={() => void handleRequestVerificationCode()}
+                    resendSeconds={resendSeconds}
+                    testCode={testCode}
+                    value={form.verificationCode}
+                  />
+                ) : null}
 
                 <PasswordField
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
@@ -201,9 +270,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               </div>
 
               <button
-                className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--ui-primary)] px-4 text-sm font-semibold text-white shadow-[0_5px_14px_rgba(79,103,232,0.2)] transition-all hover:-translate-y-px hover:bg-[var(--ui-primary-hover)] hover:shadow-[0_7px_18px_rgba(79,103,232,0.24)] active:translate-y-0 disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
+                className="ui-pressable mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[var(--ui-primary)] px-4 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(83,103,216,0.2)] hover:bg-[var(--ui-primary-hover)] hover:shadow-[0_9px_22px_rgba(83,103,216,0.22)] disabled:cursor-wait disabled:opacity-70"
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isRequestingCode}
               >
                 <span>{isSubmitting ? (isLogin ? '正在登录…' : '正在注册…') : (isLogin ? '登录并进入工作台' : '创建账号')}</span>
                 <ArrowRight size={16} strokeWidth={1.9} />
@@ -213,9 +282,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
             <p className="mb-0 mt-6 text-center text-xs leading-5 text-[var(--ui-text-muted)]">
               {isLogin ? '还没有账号？' : '已有账号？'}
               <button
-                className="ml-1 border-0 bg-transparent p-0 font-medium text-[var(--ui-primary)] hover:text-[var(--ui-primary-hover)] hover:underline"
+                className="ui-pressable ml-1 border-0 bg-transparent p-0 font-medium text-[var(--ui-primary)] hover:text-[var(--ui-primary-hover)] hover:underline"
                 type="button"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isRequestingCode}
                 onClick={() => switchMode(isLogin ? 'register' : 'login')}
               >
                 {isLogin ? '免费注册' : '立即登录'}
@@ -235,25 +304,25 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
 
 function ProductStory() {
   return (
-    <section className="hidden min-w-0 lg:block" aria-label="Block Notes 产品介绍">
-      <div className="max-w-[590px]">
-        <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--ui-border)] bg-white/80 px-3 py-1.5 text-xs font-medium text-[var(--ui-text-secondary)] shadow-[var(--ui-shadow-xs)]">
+    <section className="auth-story-reveal hidden min-w-0 lg:block" aria-label="Block Notes 产品介绍">
+      <div className="max-w-[600px]">
+        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--ui-border)] bg-[rgba(255,254,250,0.72)] px-3 py-1.5 text-xs font-medium text-[var(--ui-text-secondary)] shadow-[var(--ui-shadow-xs)] backdrop-blur">
           <Check size={13} className="text-[var(--ui-status-success)]" />
           从灵感到发布，只在一个工作台
         </p>
-        <h2 className="m-0 max-w-[570px] text-[42px] font-semibold leading-[1.16] tracking-[-0.045em] text-[var(--ui-text)]">
-          写得专注，
+        <h2 className="m-0 max-w-[590px] text-[46px] font-semibold leading-[1.12] tracking-[-0.055em] text-[var(--ui-text)]">
+          把注意力留给文字，
           <br />
-          预览得刚刚好。
+          把排版交给工作台。
         </h2>
-        <p className="mb-8 mt-5 max-w-[500px] text-[15px] leading-7 text-[var(--ui-text-secondary)]">
-          在熟悉的编辑体验里整理文章，同时查看公众号最终效果，让每一次发布更从容。
+        <p className="mb-8 mt-5 max-w-[520px] text-[15px] leading-7 text-[var(--ui-text-secondary)]">
+          一边写作，一边看到公众号里的真实效果。没有来回切换，也不用反复试错。
         </p>
       </div>
 
-      <div className="relative max-w-[620px] pr-8">
-        <div className="overflow-hidden rounded-xl border border-[var(--ui-border)] bg-white shadow-[0_20px_55px_rgba(31,40,55,0.11)]">
-          <div className="flex h-10 items-center justify-between border-b border-[var(--ui-border)] px-4">
+      <div className="relative max-w-[630px] pr-8">
+        <div className="overflow-hidden rounded-[18px] border border-[var(--ui-border)] bg-[var(--ui-surface)] shadow-[0_24px_70px_rgba(35,33,28,0.13)]">
+          <div className="flex h-10 items-center justify-between border-b border-[var(--ui-border)] bg-[#f9f8f4] px-4">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#d8dde6]" />
               <span className="h-2 w-2 rounded-full bg-[#d8dde6]" />
@@ -262,23 +331,23 @@ function ProductStory() {
             <span className="text-[10px] font-medium text-[var(--ui-text-muted)]">Block Notes 工作台</span>
           </div>
 
-          <div className="grid h-[270px] grid-cols-[104px_1fr_164px]">
-            <div className="border-r border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] p-3">
-              <div className="mb-4 flex items-center gap-1.5 text-[9px] font-semibold text-[var(--ui-text-secondary)]">
+          <div className="grid h-[270px] grid-cols-[112px_1fr_168px]">
+            <div className="border-r border-black/15 bg-[#302e29] p-3">
+              <div className="mb-4 flex items-center gap-1.5 text-[9px] font-semibold text-white/65">
                 <FileText size={11} />
                 我的文档
               </div>
               <div className="space-y-2">
-                <div className="rounded-md bg-white p-2 shadow-[var(--ui-shadow-xs)]">
+                <div className="rounded-md bg-white/[0.11] p-2">
                   <div className="h-1.5 w-12 rounded-full bg-[var(--ui-primary)]/65" />
-                  <div className="mt-1.5 h-1 w-9 rounded-full bg-[var(--ui-border-strong)]" />
+                  <div className="mt-1.5 h-1 w-9 rounded-full bg-white/25" />
                 </div>
                 <MockDocumentItem width="w-14" />
                 <MockDocumentItem width="w-10" />
               </div>
             </div>
 
-            <div className="border-r border-[var(--ui-border)] p-5">
+            <div className="border-r border-[var(--ui-border)] bg-[var(--ui-surface)] p-5">
               <div className="mb-5 flex items-center gap-1.5 text-[9px] text-[var(--ui-text-muted)]">
                 <PenLine size={11} />
                 正在编辑
@@ -296,7 +365,7 @@ function ProductStory() {
               </div>
             </div>
 
-            <div className="bg-[var(--ui-surface-subtle)] p-3">
+            <div className="bg-[#ebe9e3] p-3">
               <div className="mb-3 flex items-center justify-between text-[9px] text-[var(--ui-text-muted)]">
                 <span className="flex items-center gap-1">
                   <Smartphone size={10} />
@@ -304,7 +373,7 @@ function ProductStory() {
                 </span>
                 <span className="rounded bg-white px-1.5 py-0.5">清简</span>
               </div>
-              <div className="mx-auto h-[218px] w-[126px] rounded-md border border-[var(--ui-border)] bg-white px-3 py-4 shadow-[var(--ui-shadow-xs)]">
+              <div className="mx-auto h-[218px] w-[126px] rounded-[8px] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 py-4 shadow-[0_8px_22px_rgba(35,33,28,0.1)]">
                 <div className="h-2 w-4/5 rounded-sm bg-[var(--ui-text)]/80" />
                 <div className="mt-2 flex gap-1">
                   <span className="h-1 w-7 rounded-full bg-[var(--ui-border-strong)]" />
@@ -321,7 +390,7 @@ function ProductStory() {
           </div>
         </div>
 
-        <div className="absolute -bottom-5 right-0 flex items-center gap-2 rounded-lg border border-[var(--ui-border)] bg-white px-3 py-2.5 shadow-[var(--ui-shadow-floating)]">
+        <div className="absolute -bottom-5 right-0 flex items-center gap-2 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-3 py-2.5 shadow-[var(--ui-shadow-floating)]">
           <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--ui-status-success-soft)] text-[var(--ui-status-success)]">
             <LayoutTemplate size={14} />
           </span>
@@ -338,8 +407,8 @@ function ProductStory() {
 function MockDocumentItem({ width }: { width: string }) {
   return (
     <div className="rounded-md px-2 py-2.5">
-      <div className={`h-1.5 ${width} rounded-full bg-[var(--ui-border-strong)]`} />
-      <div className="mt-1.5 h-1 w-8 rounded-full bg-[var(--ui-border)]" />
+      <div className={`h-1.5 ${width} rounded-full bg-white/30`} />
+      <div className="mt-1.5 h-1 w-8 rounded-full bg-white/15" />
     </div>
   );
 }
@@ -357,7 +426,7 @@ function ModeButton({
 }) {
   return (
     <button
-      className={`h-9 rounded-md text-sm font-medium transition-all ${
+      className={`ui-pressable h-9 rounded-[7px] text-sm font-medium ${
         active
           ? 'bg-white text-[var(--ui-text)] shadow-[var(--ui-shadow-xs)]'
           : 'text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]'
@@ -379,6 +448,14 @@ function getAuthErrorMessage(error: unknown, isLogin: boolean): string {
         return '邮箱或密码错误';
       case 'EMAIL_ALREADY_EXISTS':
         return '该邮箱已注册，请直接登录';
+      case 'VERIFICATION_CODE_REQUIRED':
+        return '请先获取邮箱验证码';
+      case 'INVALID_VERIFICATION_CODE':
+        return '邮箱验证码错误';
+      case 'VERIFICATION_CODE_EXPIRED':
+        return '邮箱验证码已过期，请重新获取';
+      case 'VERIFICATION_CODE_ATTEMPTS_EXCEEDED':
+        return '验证码错误次数过多，请重新获取';
       case 'ACCOUNT_DISABLED':
         return '该账号已被停用，请联系管理员';
       case 'RATE_LIMITED':
@@ -398,6 +475,39 @@ function getAuthErrorMessage(error: unknown, isLogin: boolean): string {
   return isLogin ? '登录失败，请稍后重试' : '注册失败，请稍后重试';
 }
 
+function getVerificationRequestErrorMessage(error: unknown): string {
+  if (error instanceof AuthApiError) {
+    switch (error.code) {
+      case 'EMAIL_ALREADY_EXISTS':
+        return '该邮箱已注册，请直接登录';
+      case 'VERIFICATION_CODE_RATE_LIMITED':
+        return '验证码发送过于频繁，请稍后再试';
+      case 'INVALID_REQUEST':
+        return '请输入有效的邮箱地址';
+      default:
+        return '获取验证码失败，请稍后重试';
+    }
+  }
+
+  if (error instanceof TypeError) {
+    return '无法连接服务器，请检查网络后重试';
+  }
+
+  return '获取验证码失败，请稍后重试';
+}
+
+function validateEmail(email: string): string | null {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return '请输入有效的邮箱地址';
+  }
+
+  if (email.length > MAX_EMAIL_LENGTH) {
+    return `邮箱地址不能超过 ${MAX_EMAIL_LENGTH} 个字符`;
+  }
+
+  return null;
+}
+
 interface FormFieldProps {
   autoComplete: string;
   icon: React.ReactNode;
@@ -414,7 +524,7 @@ function FormField({ autoComplete, icon, id, label, maxLength, onChange, placeho
   return (
     <label className="block" htmlFor={id}>
       <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">{label}</span>
-      <span className="flex h-11 items-center gap-2.5 rounded-lg border border-[var(--ui-border-strong)] bg-white px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
+      <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
         {icon}
         <input
           className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[var(--ui-text)] outline-none placeholder:text-[#a1a9b5] focus:outline-none"
@@ -427,6 +537,62 @@ function FormField({ autoComplete, icon, id, label, maxLength, onChange, placeho
           onChange={(event) => onChange(event.target.value)}
         />
       </span>
+    </label>
+  );
+}
+
+interface VerificationCodeFieldProps {
+  id: string;
+  isRequesting: boolean;
+  onChange: (value: string) => void;
+  onRequest: () => void;
+  resendSeconds: number;
+  testCode: string;
+  value: string;
+}
+
+function VerificationCodeField({
+  id,
+  isRequesting,
+  onChange,
+  onRequest,
+  resendSeconds,
+  testCode,
+  value,
+}: VerificationCodeFieldProps) {
+  const requestDisabled = isRequesting || resendSeconds > 0;
+
+  return (
+    <label className="block" htmlFor={id}>
+      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">邮箱验证码</span>
+      <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] pl-3 pr-1.5 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
+        <ShieldCheck size={16} />
+        <input
+          className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm tracking-[0.18em] text-[var(--ui-text)] outline-none placeholder:tracking-normal placeholder:text-[#a1a9b5] focus:outline-none"
+          id={id}
+          type="text"
+          value={value}
+          autoComplete="one-time-code"
+          inputMode="numeric"
+          maxLength={6}
+          pattern="[0-9]{6}"
+          placeholder="输入 6 位验证码"
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <button
+          className="ui-pressable h-8 shrink-0 rounded-[7px] border-0 bg-[var(--ui-primary-soft)] px-2.5 text-[11px] font-medium text-[var(--ui-primary)] hover:bg-[var(--ui-primary-border)] disabled:cursor-not-allowed disabled:opacity-60"
+          type="button"
+          disabled={requestDisabled}
+          onClick={onRequest}
+        >
+          {isRequesting ? '生成中…' : resendSeconds > 0 ? `${resendSeconds}s 后重试` : '获取验证码'}
+        </button>
+      </span>
+      {testCode ? (
+        <span className="mt-2 block rounded-[8px] bg-[var(--ui-status-success-soft)] px-2.5 py-2 text-[11px] text-[var(--ui-status-success)]">
+          开发测试验证码：<strong className="font-semibold tracking-[0.12em]">{testCode}</strong>
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -455,7 +621,7 @@ function PasswordField({
   return (
     <label className="block" htmlFor={id}>
       <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">{label}</span>
-      <span className="flex h-11 items-center gap-2.5 rounded-lg border border-[var(--ui-border-strong)] bg-white px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
+      <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
         <LockKeyhole size={16} />
         <input
           className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-[var(--ui-text)] outline-none placeholder:text-[#a1a9b5] focus:outline-none"
@@ -467,7 +633,7 @@ function PasswordField({
           onChange={(event) => onChange(event.target.value)}
         />
         <button
-          className="-mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-md border-0 bg-transparent text-[var(--ui-text-muted)] transition-colors hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]"
+          className="ui-pressable ui-icon-button -mr-1 h-8 w-8 shrink-0 border-0 bg-transparent text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]"
           type="button"
           aria-label={showPassword ? '隐藏密码' : '显示密码'}
           onClick={onToggleVisibility}

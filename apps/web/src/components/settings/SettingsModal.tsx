@@ -129,7 +129,7 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      className={`relative h-6 w-10 rounded-full transition-colors ${
+      className={`ui-pressable relative h-6 w-10 rounded-full ${
         checked ? 'bg-[var(--ui-primary)]' : 'bg-[var(--ui-border-strong)]'
       }`}
       onClick={() => onChange(!checked)}
@@ -289,7 +289,7 @@ export function SettingsModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--ui-overlay)] p-0 md:p-5"
+      className="ui-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[var(--ui-overlay)] p-0 backdrop-blur-[2px] md:p-5"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onOpenChange(false);
       }}
@@ -301,7 +301,7 @@ export function SettingsModal({
         aria-labelledby="settings-title"
         tabIndex={-1}
         onKeyDown={handleDialogKeyDown}
-        className="flex h-[100dvh] w-full max-w-[940px] flex-col overflow-hidden border-0 bg-[var(--ui-surface)] shadow-[var(--ui-shadow-overlay)] md:h-[min(82vh,680px)] md:flex-row md:rounded-[var(--ui-radius-overlay)] md:border md:border-[var(--ui-border)]"
+        className="ui-modal-surface flex h-[100dvh] w-full max-w-[940px] flex-col overflow-hidden border-0 bg-[var(--ui-surface)] shadow-[var(--ui-shadow-overlay)] md:h-[min(82vh,680px)] md:flex-row md:rounded-[var(--ui-radius-overlay)] md:border md:border-[var(--ui-border)]"
       >
         <aside className="shrink-0 border-b border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 pb-2 pt-4 md:w-[220px] md:border-b-0 md:border-r md:px-3 md:py-5">
           <div className="mb-3 flex items-center justify-between px-2">
@@ -310,7 +310,7 @@ export function SettingsModal({
             </h2>
             <button
               type="button"
-              className="grid h-8 w-8 place-items-center rounded-[var(--ui-radius-control)] text-[var(--ui-text-muted)] hover:bg-[var(--ui-border)] hover:text-[var(--ui-text)] md:hidden"
+              className="ui-pressable ui-icon-button h-8 w-8 text-[var(--ui-text-muted)] hover:bg-[var(--ui-border)] hover:text-[var(--ui-text)] md:hidden"
               onClick={() => onOpenChange(false)}
               aria-label="关闭设置"
             >
@@ -326,7 +326,7 @@ export function SettingsModal({
                   key={item.id}
                   type="button"
                   aria-current={selected ? 'page' : undefined}
-                  className={`flex h-9 shrink-0 items-center gap-2 rounded-[var(--ui-radius-control)] px-3 text-sm transition-colors md:w-full ${
+                  className={`ui-pressable flex h-9 shrink-0 items-center gap-2 rounded-[var(--ui-radius-control)] px-3 text-sm md:w-full ${
                     selected
                       ? 'bg-[var(--ui-surface)] font-medium text-[var(--ui-text)] shadow-[var(--ui-shadow-xs)]'
                       : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface)] hover:text-[var(--ui-text)]'
@@ -351,7 +351,7 @@ export function SettingsModal({
         <div className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">
           <button
             type="button"
-            className="absolute right-5 top-5 z-10 hidden h-8 w-8 place-items-center rounded-[var(--ui-radius-control)] text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)] md:grid"
+            className="ui-pressable ui-icon-button absolute right-5 top-5 z-10 hidden h-8 w-8 text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)] md:grid"
             onClick={() => onOpenChange(false)}
             aria-label="关闭设置"
           >
@@ -394,7 +394,7 @@ export function SettingsModal({
                       type="button"
                       disabled={signOutPending}
                       onClick={() => void handleSignOut()}
-                      className="inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-status-danger)] hover:border-[var(--ui-status-danger)] hover:bg-[var(--ui-status-danger-soft)] disabled:cursor-wait disabled:opacity-60"
+                      className="ui-pressable inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-status-danger)] hover:border-[var(--ui-status-danger)] hover:bg-[var(--ui-status-danger-soft)] disabled:cursor-wait disabled:opacity-60"
                     >
                       <LogOut size={16} />
                       {signOutPending ? '正在退出…' : '退出登录'}
@@ -421,7 +421,7 @@ export function SettingsModal({
                           key={option.value}
                           aria-pressed={selected}
                           onClick={() => updateAppearance({ accent: option.value })}
-                          className={`flex h-11 items-center gap-2.5 rounded-[var(--ui-radius-control)] border px-3 text-sm ${
+                          className={`ui-pressable flex h-11 items-center gap-2.5 rounded-[var(--ui-radius-control)] border px-3 text-sm ${
                             selected
                               ? 'border-[var(--ui-primary)] bg-[var(--ui-primary-soft)] text-[var(--ui-text)]'
                               : 'border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)]'
@@ -447,7 +447,7 @@ export function SettingsModal({
                           key={option.value}
                           aria-pressed={selected}
                           onClick={() => updateAppearance({ scale: option.value })}
-                          className={`rounded-[var(--ui-radius-surface)] border p-3 text-left ${
+                          className={`ui-pressable rounded-[var(--ui-radius-surface)] border p-3 text-left ${
                             selected
                               ? 'border-[var(--ui-primary)] bg-[var(--ui-primary-soft)]'
                               : 'border-[var(--ui-border)] hover:bg-[var(--ui-surface-subtle)]'
@@ -512,7 +512,7 @@ export function SettingsModal({
                   <button
                     type="button"
                     onClick={() => downloadSettingsJson(user, preferences)}
-                    className="inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]"
+                    className="ui-pressable inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)] hover:text-[var(--ui-text)]"
                   >
                     <Download size={15} /> 导出 JSON
                   </button>
@@ -523,14 +523,14 @@ export function SettingsModal({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        className="h-9 rounded-[var(--ui-radius-control)] px-3 text-sm text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)]"
+                        className="ui-pressable h-9 rounded-[var(--ui-radius-control)] px-3 text-sm text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)]"
                         onClick={() => setConfirmReset(false)}
                       >
                         取消
                       </button>
                       <button
                         type="button"
-                        className="h-9 rounded-[var(--ui-radius-control)] bg-[var(--ui-status-danger)] px-3 text-sm font-medium text-white"
+                        className="ui-pressable h-9 rounded-[var(--ui-radius-control)] bg-[var(--ui-status-danger)] px-3 text-sm font-medium text-white"
                         onClick={() => {
                           reset();
                           setConfirmReset(false);
@@ -544,7 +544,7 @@ export function SettingsModal({
                     <button
                       type="button"
                       onClick={() => setConfirmReset(true)}
-                      className="inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-status-danger)] hover:border-[var(--ui-status-danger)] hover:bg-[var(--ui-status-danger-soft)]"
+                      className="ui-pressable inline-flex h-9 items-center gap-2 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 text-sm font-medium text-[var(--ui-status-danger)] hover:border-[var(--ui-status-danger)] hover:bg-[var(--ui-status-danger-soft)]"
                     >
                       <RotateCcw size={15} /> 重置
                     </button>

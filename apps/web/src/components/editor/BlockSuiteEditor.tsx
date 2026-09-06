@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import '@blocksuite/presets/themes/affine.css';
 import { AffineEditorContainer } from '@blocksuite/presets';
 import {
   createBlockSuiteDocument,
   getBlockSuiteTitle,
+  insertNormalizedBlocks,
   normalizedBlocksFromBlockSuiteDoc,
   observeBlockSuiteTitle,
   syncBlockSuiteTitle,
@@ -14,27 +15,60 @@ import type { NormalizedBlock } from '../../types/document';
 const MAX_PERSISTED_IMAGE_SIZE = 1_500_000;
 
 interface BlockSuiteEditorProps {
+  author: string;
   docId: string;
   title: string;
+  updatedAt: string;
   blocks: NormalizedBlock[];
   onBlocksChange: (blocks: NormalizedBlock[]) => void;
   onTitleChange: (title: string) => void;
 }
 
-export function BlockSuiteEditor({
-  docId,
-  title,
-  blocks,
-  onBlocksChange,
-  onTitleChange,
-}: BlockSuiteEditorProps) {
+export interface BlockSuiteEditorHandle {
+  insertBlocks: (blocks: NormalizedBlock[]) => boolean;
+}
+
+export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEditorProps>(function BlockSuiteEditor(
+  {
+    author,
+    docId,
+    title,
+    updatedAt,
+    blocks,
+    onBlocksChange,
+    onTitleChange,
+  },
+  ref,
+) {
   const hostRef = useRef<HTMLDivElement>(null);
   const bridgeRef = useRef<BlockSuiteDocumentBridge | null>(null);
+  const editorRef = useRef<AffineEditorContainer | null>(null);
   const blocksChangeRef = useRef(onBlocksChange);
   const titleChangeRef = useRef(onTitleChange);
 
   blocksChangeRef.current = onBlocksChange;
   titleChangeRef.current = onTitleChange;
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertBlocks(nextBlocks) {
+        const bridge = bridgeRef.current;
+        const editor = editorRef.current;
+        if (!bridge || !editor || nextBlocks.length === 0) return false;
+
+        const textSelection = editor.host.selection.find('text');
+        const blockSelection = editor.host.selection.find('block');
+        const anchorBlockId = textSelection?.end.blockId ?? blockSelection?.blockId ?? null;
+        const insertedIds = insertNormalizedBlocks(bridge.doc, nextBlocks, anchorBlockId);
+
+        if (insertedIds.length === 0) return false;
+        focusInsertedContent(editor, insertedIds);
+        return true;
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     const host = hostRef.current;
@@ -59,6 +93,7 @@ export function BlockSuiteEditor({
     editor.className = 'affine-editor-container';
     editor.setAttribute('aria-label', 'BlockSuite 文档编辑器');
     host.replaceChildren(editor);
+    editorRef.current = editor;
 
     const blockDisposable = bridge.doc.slots.blockUpdated.on(() => {
       window.clearTimeout(blocksTimer);
@@ -80,7 +115,10 @@ export function BlockSuiteEditor({
     });
 
     void editor.getUpdateComplete().then(() => {
-      if (!disposed) configureEditor(editor);
+      if (!disposed) {
+        configureEditor(editor);
+        updateDocumentMetadata(editor, author, updatedAt);
+      }
     });
 
     return () => {
@@ -100,6 +138,7 @@ export function BlockSuiteEditor({
       blockDisposable.dispose();
       disposeTitleObserver();
       bridgeRef.current = null;
+      editorRef.current = null;
       host.replaceChildren();
     };
   }, [docId]);
@@ -109,7 +148,55 @@ export function BlockSuiteEditor({
     syncBlockSuiteTitle(bridgeRef.current.doc, title);
   }, [title]);
 
+  useEffect(() => {
+    if (!editorRef.current) return;
+    updateDocumentMetadata(editorRef.current, author, updatedAt);
+  }, [author, updatedAt]);
+
   return <div ref={hostRef} className="blocksuite-editor-host h-full min-h-0 w-full" />;
+});
+
+function focusInsertedContent(editor: AffineEditorContainer, insertedIds: string[]) {
+  window.requestAnimationFrame(() => {
+    const editableId = insertedIds.find((id) => editor.doc.getBlockById(id)?.text);
+    const model = editableId ? editor.doc.getBlockById(editableId) : null;
+
+    if (model?.text) {
+      editor.host.selection.set([
+        editor.host.selection.create('text', {
+          from: {
+            blockId: model.id,
+            index: model.text.length,
+            length: 0,
+          },
+          to: null,
+        }),
+      ]);
+    }
+
+    const targetId = editableId ?? insertedIds[0];
+    editor
+      .querySelector<HTMLElement>(`[data-block-id="${targetId}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+}
+
+function updateDocumentMetadata(editor: AffineEditorContainer, author: string, updatedAt: string) {
+  const viewport = editor.querySelector<HTMLElement>('.affine-page-viewport');
+  const docTitle = editor.querySelector<HTMLElement>('doc-title');
+  if (viewport) viewport.dataset.workspaceLabel = 'OVERVIEW';
+  if (docTitle) docTitle.dataset.workspaceMeta = `${author || 'Unknown author'}  ·  ${formatWorkspaceDate(updatedAt)}`;
+}
+
+function formatWorkspaceDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
 }
 
 function configureEditor(editor: AffineEditorContainer) {

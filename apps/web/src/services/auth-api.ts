@@ -15,6 +15,16 @@ export interface AuthCredentials {
   password: string;
 }
 
+export interface RegisterCredentials extends AuthCredentials {
+  verificationCode: string;
+}
+
+export interface RegistrationVerificationResponse {
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+  testCode?: string;
+}
+
 interface AuthResponse {
   accessToken: string;
   user: AuthUser;
@@ -98,7 +108,10 @@ function applySession(session: AuthResponse, expectedGeneration = sessionGenerat
   return session.user;
 }
 
-async function createSession(path: string, credentials: AuthCredentials): Promise<AuthUser> {
+async function createSession(
+  path: string,
+  credentials: AuthCredentials | RegisterCredentials,
+): Promise<AuthUser> {
   const generation = ++sessionGeneration;
   accessToken = null;
   const session = await request<AuthResponse>(path, {
@@ -190,7 +203,16 @@ export function login(credentials: AuthCredentials): Promise<AuthUser> {
   return createSession('/api/auth/login', credentials);
 }
 
-export function register(credentials: AuthCredentials): Promise<AuthUser> {
+export function requestRegistrationVerificationCode(
+  email: string,
+): Promise<RegistrationVerificationResponse> {
+  return request<RegistrationVerificationResponse>('/api/auth/register/verification-code', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function register(credentials: RegisterCredentials): Promise<AuthUser> {
   return createSession('/api/auth/register', credentials);
 }
 

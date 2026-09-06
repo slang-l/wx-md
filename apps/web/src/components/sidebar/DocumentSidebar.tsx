@@ -1,230 +1,163 @@
-import { FileText, LogOut, Mail, PenLine, Plus, Search, Settings2, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import type { AuthUser } from '../../services/auth-api';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDocsStore } from '../../store/docsStore';
 import type { AppDoc } from '../../types/document';
+import { PageTree } from './PageTree';
+import { buildPageTree, type PageNode } from './page-tree-data';
 
 interface DocumentSidebarProps {
   docs: AppDoc[];
   currentDocId: string;
-  isSigningOut: boolean;
   onDocumentOpen?: () => void;
   onOpenSettings: () => void;
-  onSignOut: () => void | Promise<void>;
-  user: AuthUser;
 }
 
 export function DocumentSidebar({
   docs,
   currentDocId,
-  isSigningOut,
   onDocumentOpen,
   onOpenSettings,
-  onSignOut,
-  user,
 }: DocumentSidebarProps) {
   const createDoc = useDocsStore((state) => state.createDoc);
+  const setCurrentDocId = useDocsStore((state) => state.setCurrentDocId);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pageTree = useMemo(() => buildPageTree(docs), [docs]);
+  const [selectedId, setSelectedId] = useState(currentDocId);
   const [query, setQuery] = useState('');
-  const userInitials = getUserInitials(user);
-  const filteredDocs = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery) return docs;
-    return docs.filter((doc) => doc.title.toLocaleLowerCase().includes(normalizedQuery));
-  }, [docs, query]);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  const handleCreateDoc = () => {
-    createDoc();
+  useEffect(() => {
+    setSelectedId(currentDocId);
+  }, [currentDocId]);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLocaleLowerCase();
+
+      if (key === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+        window.setTimeout(() => searchInputRef.current?.focus(), 0);
+      }
+
+      if (key === 'n') {
+        event.preventDefault();
+        handleCreateTopLevelPage();
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  });
+
+  const handleCreateTopLevelPage = () => {
+    const documentId = createDoc();
+    setSelectedId(documentId);
+    setQuery('');
+    onDocumentOpen?.();
+  };
+
+  const handleAddChild = (parent: PageNode) => {
+    const documentId = createDoc(parent.id);
+    setSelectedId(documentId);
+    setQuery('');
+    onDocumentOpen?.();
+  };
+
+  const handleSelectPage = (node: PageNode) => {
+    setSelectedId(node.id);
+    setCurrentDocId(node.id);
+    onDocumentOpen?.();
+  };
+
+  const openSearch = () => {
+    setSearchOpen(true);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  };
+
+  const closeSearch = () => {
+    setQuery('');
+    setSearchOpen(false);
+  };
+
+  const openInbox = () => {
+    const newestDoc = [...docs].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+    if (!newestDoc) return;
+
+    setCurrentDocId(newestDoc.id);
+    setSelectedId(newestDoc.id);
     onDocumentOpen?.();
   };
 
   return (
-    <aside className="sidebar-panel flex min-h-0 flex-col bg-[#f5f5f4] px-2.5 pb-2.5 pt-2 text-[var(--ui-text)]">
-      <header className="mb-2">
-        <div className="flex h-11 items-center gap-2 rounded-lg px-2">
-          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[#242424] text-white">
-            <PenLine size={14} strokeWidth={1.9} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold leading-4 text-[#252525]">Block Notes</div>
-            <div className="truncate text-xs leading-4 text-[#858585]">{user.name} 的空间</div>
-          </div>
-          <button
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#737373] transition-colors hover:bg-black/[0.06] hover:text-[#252525]"
-            type="button"
-            aria-label="新建文档"
-            title="新建文档"
-            onClick={handleCreateDoc}
-          >
-            <Plus size={16} />
-          </button>
-        </div>
+    <aside className="notion-sidebar" aria-label="Workspace navigation">
+      <header className="notion-sidebar-workspace">
+        <span className="notion-sidebar-logo" aria-hidden="true">W</span>
+        <strong>workspace</strong>
       </header>
 
-      <label className="mb-3 flex h-8 items-center gap-2 rounded-md border border-transparent bg-black/[0.035] px-2.5 text-[#858585] transition-colors hover:bg-black/[0.05] focus-within:border-[#d8d8d5] focus-within:bg-white">
-        <Search size={15} className="shrink-0" />
-        <input
-          className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-[#303030] outline-none placeholder:text-[#929292]"
-          value={query}
-          placeholder="搜索文档"
-          onChange={(event) => setQuery(event.target.value)}
-          aria-label="搜索文档"
-        />
-        {query ? (
-          <button
-            className="grid h-5 w-5 place-items-center rounded text-[#929292] hover:bg-black/[0.06] hover:text-[#4b4b4b]"
-            type="button"
-            onClick={() => setQuery('')}
-            aria-label="清空搜索"
-          >
-            <X size={13} />
-          </button>
-        ) : null}
-      </label>
+      <section className="notion-sidebar-shortcuts" aria-label="Workspace shortcuts">
+        {searchOpen ? (
+          <label className="notion-sidebar-search">
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={query}
+              placeholder="Search pages"
+              aria-label="Search pages"
+              autoFocus
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') closeSearch();
+              }}
+            />
+            <button type="button" aria-label="Close search" onClick={closeSearch}>×</button>
+          </label>
+        ) : (
+          <ShortcutButton label="Search" shortcut="⌘K" onClick={openSearch} />
+        )}
+        <ShortcutButton label="New page" shortcut="⌘N" onClick={handleCreateTopLevelPage} />
+        <ShortcutButton label="Inbox" onClick={openInbox} />
+      </section>
 
-      <div className="mb-1 flex h-7 items-center justify-between px-2">
-        <span className="text-xs font-medium text-[#777]">页面</span>
-        <span className="text-xs tabular-nums text-[#9a9a9a]">{docs.length}</span>
-      </div>
+      <section className="notion-sidebar-pages" aria-label="Page navigation">
+        <header className="notion-sidebar-pages-header">
+          <span>PAGES</span>
+          <button type="button" aria-label="Add page" title="Add page" onClick={handleCreateTopLevelPage}>+</button>
+        </header>
 
-      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto" aria-label="文档列表">
-        {filteredDocs.map((doc) => (
-          <DocumentListItem
-            key={doc.id}
-            doc={doc}
-            active={doc.id === currentDocId}
-            onOpen={onDocumentOpen}
+        <div className="notion-sidebar-tree-scroll">
+          <PageTree
+            nodes={pageTree}
+            query={query}
+            selectedId={selectedId}
+            onAddChild={handleAddChild}
+            onSelect={handleSelectPage}
           />
-        ))}
-        {filteredDocs.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <Search className="mx-auto mb-2 text-[#aaa]" size={17} />
-            <p className="m-0 text-xs font-medium text-[#575757]">没有匹配的文档</p>
-            <button className="mt-2 text-xs text-[var(--ui-accent)] hover:underline" type="button" onClick={() => setQuery('')}>
-              清空搜索
-            </button>
-          </div>
-        ) : null}
-      </nav>
-
-      <div className="mt-2 border-t border-black/[0.07] pt-2">
-        <div className="group/account flex h-11 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-black/[0.035]">
-          <button
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-focus-ring)]"
-            type="button"
-            aria-label="打开设置"
-            title="打开设置"
-            onClick={onOpenSettings}
-          >
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-white text-xs font-semibold text-[#5f6fd8] ring-1 ring-black/[0.06]">
-              {userInitials}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-medium leading-4 text-[#383838]">{user.name}</span>
-              <span className="flex min-w-0 items-center gap-1 text-xs leading-4 text-[#8a8a8a]" title={user.email}>
-                <Mail className="shrink-0" size={11} />
-                <span className="truncate">{user.email}</span>
-              </span>
-            </span>
-          </button>
-          <button
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#888] opacity-70 transition-colors hover:bg-black/[0.06] hover:text-[#383838] focus-visible:opacity-100 group-hover/account:opacity-100"
-            type="button"
-            aria-label="打开设置"
-            title="设置"
-            onClick={onOpenSettings}
-          >
-            <Settings2 size={14} strokeWidth={1.8} />
-          </button>
-          <button
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#888] opacity-70 transition-colors hover:bg-black/[0.06] hover:text-[var(--ui-status-danger)] focus-visible:opacity-100 group-hover/account:opacity-100"
-            type="button"
-            aria-label={isSigningOut ? '正在退出登录' : '退出登录'}
-            title={isSigningOut ? '正在退出登录' : '退出登录'}
-            disabled={isSigningOut}
-            onClick={onSignOut}
-          >
-            <LogOut size={14} strokeWidth={1.8} />
-          </button>
         </div>
-      </div>
+      </section>
+
+      <footer className="notion-sidebar-footer">
+        <button type="button" onClick={() => setSelectedId('trash')}>Trash</button>
+        <button type="button" onClick={onOpenSettings}>Settings</button>
+      </footer>
     </aside>
   );
 }
 
-function getUserInitials(user: AuthUser): string {
-  const displayName = user.name.trim() || user.email.split('@')[0] || 'U';
-  const words = displayName.split(/\s+/).filter(Boolean);
-
-  if (words.length > 1) {
-    return words.slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase();
-  }
-
-  return Array.from(displayName).slice(0, 2).join('').toUpperCase();
-}
-
-function DocumentListItem({ doc, active, onOpen }: { doc: AppDoc; active: boolean; onOpen?: () => void }) {
-  const setCurrentDocId = useDocsStore((state) => state.setCurrentDocId);
-  const renameDoc = useDocsStore((state) => state.renameDoc);
-  const deleteDoc = useDocsStore((state) => state.deleteDoc);
-  const docsCount = useDocsStore((state) => state.docs.length);
-  const [editingTitle, setEditingTitle] = useState(doc.title);
-
-  useEffect(() => {
-    setEditingTitle(doc.title);
-  }, [doc.title]);
-
-  const displayTitle = doc.title.trim() || '无标题文档';
-
+function ShortcutButton({
+  label,
+  shortcut,
+  onClick,
+}: {
+  label: string;
+  shortcut?: string;
+  onClick: () => void;
+}) {
   return (
-    <div
-      className={`group/doc relative flex h-9 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors ${
-        active
-          ? 'bg-black/[0.065] text-[#242424]'
-          : 'text-[#555] hover:bg-black/[0.04] hover:text-[#292929]'
-      }`}
-      onClick={() => {
-        setCurrentDocId(doc.id);
-        onOpen?.();
-      }}
-    >
-      <span
-        className={`grid h-6 w-6 shrink-0 place-items-center ${active ? 'text-[var(--ui-accent)]' : 'text-[#8a8a8a]'}`}
-      >
-        <FileText size={15} strokeWidth={1.8} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <input
-          className="block h-7 w-full min-w-0 truncate rounded border border-transparent bg-transparent px-0 text-[13px] font-medium text-current outline-none focus:border-[#d7d7d4] focus:bg-white focus:px-1.5"
-          value={editingTitle}
-          placeholder="无标题文档"
-          title={displayTitle}
-          onChange={(event) => setEditingTitle(event.target.value)}
-          onClick={(event) => event.stopPropagation()}
-          onFocus={() => setCurrentDocId(doc.id)}
-          onBlur={() => renameDoc(doc.id, editingTitle)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.currentTarget.blur();
-            if (event.key === 'Escape') {
-              setEditingTitle(doc.title);
-              event.currentTarget.blur();
-            }
-          }}
-          aria-label={`重命名 ${displayTitle}`}
-        />
-      </div>
-      <button
-        className="absolute right-1 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md bg-[#e8e8e6] text-[#888] opacity-0 transition-colors hover:bg-[#dededb] hover:text-[#bb4040] focus-visible:opacity-100 group-hover/doc:opacity-100 disabled:pointer-events-none disabled:opacity-0"
-        type="button"
-        disabled={docsCount <= 1}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (window.confirm(`删除《${displayTitle}》？`)) deleteDoc(doc.id);
-        }}
-        aria-label={`删除 ${displayTitle}`}
-        title="删除文档"
-      >
-        <Trash2 size={14} />
-      </button>
-    </div>
+    <button className="notion-sidebar-shortcut" type="button" onClick={onClick}>
+      <span>{label}</span>
+      {shortcut ? <kbd>{shortcut}</kbd> : null}
+    </button>
   );
 }
