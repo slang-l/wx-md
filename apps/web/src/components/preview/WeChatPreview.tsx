@@ -410,6 +410,7 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
         {themeEditorOpen && themeWorkspace.active ? (
           <VisualThemeEditor
             active={themeWorkspace.active}
+            dirty={activeThemeDirty}
             savedCount={themeWorkspace.savedThemes.length}
             saving={savingTheme}
             onBaseChange={changeBaseTheme}
