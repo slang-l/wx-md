@@ -8,87 +8,87 @@
   color-scheme: light !important;
   --theme-ink: #34251d;
   --theme-ink-soft: #705f50;
-  --theme-ink-wash: rgba(52, 37, 29, .08);
+  --theme-ink-wash: rgba(52, 37, 29, 0.08);
   --theme-accent: #b7352b;
   --theme-accent-deep: #81231d;
-  --theme-accent-soft: rgba(183, 53, 43, .12);
+  --theme-accent-soft: rgba(183, 53, 43, 0.12);
   --theme-secondary: #49604b;
   --theme-highlight: #c0923f;
   --theme-surface: #f7ebd0;
   --theme-surface-light: #fff9e9;
-  --theme-surface-glass: rgba(255, 249, 233, .90);
-  --theme-line: rgba(65, 55, 44, .18);
-  --theme-shadow: rgba(53, 40, 28, .15);
+  --theme-surface-glass: rgba(255, 249, 233, 0.9);
+  --theme-line: rgba(65, 55, 44, 0.18);
+  --theme-shadow: rgba(53, 40, 28, 0.15);
 
   --color-token-bg-primary: var(--theme-surface) !important;
   --color-token-bg-secondary: var(--theme-surface-glass) !important;
-  --color-token-bg-tertiary: rgba(227, 211, 184, .58) !important;
-  --color-token-main-surface-primary: rgba(250, 242, 225, .96) !important;
+  --color-token-bg-tertiary: rgba(227, 211, 184, 0.58) !important;
+  --color-token-main-surface-primary: rgba(250, 242, 225, 0.96) !important;
   --color-token-side-bar-background: #1d1c19 !important;
   --color-token-foreground: var(--theme-ink) !important;
   --color-token-text-primary: var(--theme-ink) !important;
   --color-token-text-secondary: var(--theme-ink-soft) !important;
-  --color-token-text-tertiary: rgba(36, 33, 29, .58) !important;
+  --color-token-text-tertiary: rgba(36, 33, 29, 0.58) !important;
   --color-token-description-foreground: var(--theme-ink-soft) !important;
   --color-token-icon-foreground: var(--theme-ink-soft) !important;
-  --color-token-input-background: rgba(255, 252, 245, .95) !important;
+  --color-token-input-background: rgba(255, 252, 245, 0.95) !important;
   --color-token-input-foreground: var(--theme-ink) !important;
-  --color-token-input-placeholder-foreground: rgba(36, 33, 29, .48) !important;
-  --color-token-input-border: rgba(99, 69, 44, .25) !important;
+  --color-token-input-placeholder-foreground: rgba(36, 33, 29, 0.48) !important;
+  --color-token-input-border: rgba(99, 69, 44, 0.25) !important;
   --color-token-border: var(--theme-line) !important;
   --color-token-border-default: var(--theme-line) !important;
-  --color-token-border-heavy: rgba(65, 55, 44, .30) !important;
-  --color-token-list-hover-background: rgba(167, 46, 37, .10) !important;
-  --color-token-list-active-selection-background: rgba(167, 46, 37, .18) !important;
-  --color-token-toolbar-hover-background: rgba(167, 46, 37, .11) !important;
+  --color-token-border-heavy: rgba(65, 55, 44, 0.3) !important;
+  --color-token-list-hover-background: rgba(167, 46, 37, 0.1) !important;
+  --color-token-list-active-selection-background: rgba(167, 46, 37, 0.18) !important;
+  --color-token-toolbar-hover-background: rgba(167, 46, 37, 0.11) !important;
   --color-token-button-background: var(--theme-accent) !important;
   --color-token-button-foreground: #fffaf0 !important;
-  --color-token-button-border: rgba(127, 33, 28, .34) !important;
+  --color-token-button-border: rgba(127, 33, 28, 0.34) !important;
   --color-token-link: var(--theme-accent-deep) !important;
   --color-token-text-link-foreground: var(--theme-accent-deep) !important;
   --color-token-primary: var(--theme-accent) !important;
-  --color-token-focus-border: rgba(167, 46, 37, .72) !important;
-  --color-token-dropdown-background: rgba(255, 250, 240, .98) !important;
+  --color-token-focus-border: rgba(167, 46, 37, 0.72) !important;
+  --color-token-dropdown-background: rgba(255, 250, 240, 0.98) !important;
   --color-token-dropdown-foreground: var(--theme-ink) !important;
-  --color-token-menu-background: rgba(255, 250, 240, .98) !important;
+  --color-token-menu-background: rgba(255, 250, 240, 0.98) !important;
   --color-token-menu-border: var(--theme-line) !important;
-  --color-token-badge-background: rgba(167, 46, 37, .13) !important;
+  --color-token-badge-background: rgba(167, 46, 37, 0.13) !important;
   --color-token-badge-foreground: var(--theme-accent-deep) !important;
-  --color-token-scrollbar-slider-background: rgba(99, 69, 44, .24) !important;
-  --color-token-scrollbar-slider-hover-background: rgba(167, 46, 37, .32) !important;
-  --color-token-scrollbar-slider-active-background: rgba(167, 46, 37, .46) !important;
+  --color-token-scrollbar-slider-background: rgba(99, 69, 44, 0.24) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(167, 46, 37, 0.32) !important;
+  --color-token-scrollbar-slider-active-background: rgba(167, 46, 37, 0.46) !important;
   --color-token-text-preformat-foreground: #6f271f !important;
-  --color-token-text-preformat-background: rgba(167, 46, 37, .08) !important;
-  --color-token-text-code-block-background: rgba(255, 252, 245, .90) !important;
+  --color-token-text-preformat-background: rgba(167, 46, 37, 0.08) !important;
+  --color-token-text-code-block-background: rgba(255, 252, 245, 0.9) !important;
 }
 
 html.codedrobe-host-codex body {
   background:
-    radial-gradient(circle at 84% 12%, rgba(183, 53, 43, .10), transparent 25%),
-    linear-gradient(135deg, rgba(255, 249, 233, .97), rgba(238, 218, 177, .91)) !important;
+    radial-gradient(circle at 84% 12%, rgba(183, 53, 43, 0.1), transparent 25%),
+    linear-gradient(135deg, rgba(255, 249, 233, 0.97), rgba(238, 218, 177, 0.91)) !important;
   color: var(--theme-ink) !important;
-  font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei UI", sans-serif !important;
+  font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei UI', sans-serif !important;
 }
 
 html.codedrobe-host-codex body::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: .18;
+  opacity: 0.18;
   background-image:
-    repeating-linear-gradient(7deg, rgba(80, 61, 40, .10) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(97deg, rgba(255, 255, 255, .18) 0 1px, transparent 1px 11px);
+    repeating-linear-gradient(7deg, rgba(80, 61, 40, 0.1) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(97deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 11px);
   mix-blend-mode: multiply;
 }
 
 html.codedrobe-host-codex aside.app-shell-left-panel {
   background:
-    radial-gradient(circle at 15% 8%, rgba(183, 53, 43, .34), transparent 26%),
+    radial-gradient(circle at 15% 8%, rgba(183, 53, 43, 0.34), transparent 26%),
     linear-gradient(180deg, #352119, #1d1713) !important;
-  border-right: 1px solid rgba(184, 135, 61, .34) !important;
-  box-shadow: 12px 0 32px rgba(36, 28, 20, .15) !important;
+  border-right: 1px solid rgba(184, 135, 61, 0.34) !important;
+  box-shadow: 12px 0 32px rgba(36, 28, 20, 0.15) !important;
   color: #f7ecd8 !important;
 }
 
@@ -98,29 +98,37 @@ html.codedrobe-host-codex aside.app-shell-left-panel :is(a, button, div, p, span
 
 html.codedrobe-host-codex aside.app-shell-left-panel :is(a, button) {
   border-radius: 9px !important;
-  transition: background-color .16s ease, transform .16s ease, box-shadow .16s ease !important;
+  transition:
+    background-color 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease !important;
 }
 
 html.codedrobe-host-codex aside.app-shell-left-panel :is(a, button):hover {
-  background: linear-gradient(90deg, rgba(167, 46, 37, .54), rgba(167, 46, 37, .18)) !important;
+  background: linear-gradient(90deg, rgba(167, 46, 37, 0.54), rgba(167, 46, 37, 0.18)) !important;
   box-shadow: inset 3px 0 var(--theme-highlight) !important;
   transform: translateX(2px);
 }
 
-html.codedrobe-host-codex aside.app-shell-left-panel :is([aria-current="page"], [aria-selected="true"]) {
-  background: linear-gradient(90deg, rgba(167, 46, 37, .72), rgba(167, 46, 37, .22)) !important;
-  box-shadow: inset 3px 0 #d3a359, 0 6px 18px rgba(0, 0, 0, .14) !important;
+html.codedrobe-host-codex
+  aside.app-shell-left-panel
+  :is([aria-current='page'], [aria-selected='true']) {
+  background: linear-gradient(90deg, rgba(167, 46, 37, 0.72), rgba(167, 46, 37, 0.22)) !important;
+  box-shadow:
+    inset 3px 0 #d3a359,
+    0 6px 18px rgba(0, 0, 0, 0.14) !important;
 }
 
 html.codedrobe-host-codex main.main-surface {
   position: relative;
-  background:
-    linear-gradient(rgba(250, 242, 225, .94), rgba(246, 235, 214, .96)) !important;
-  border: 1px solid rgba(99, 69, 44, .20) !important;
+  background: linear-gradient(rgba(250, 242, 225, 0.94), rgba(246, 235, 214, 0.96)) !important;
+  border: 1px solid rgba(99, 69, 44, 0.2) !important;
   border-right: 0 !important;
   border-bottom: 0 !important;
   border-radius: 22px 0 0 !important;
-  box-shadow: -10px 0 32px rgba(53, 40, 28, .10), inset 0 1px rgba(255, 255, 255, .66) !important;
+  box-shadow:
+    -10px 0 32px rgba(53, 40, 28, 0.1),
+    inset 0 1px rgba(255, 255, 255, 0.66) !important;
   overflow: hidden !important;
 }
 
@@ -131,23 +139,33 @@ html.codedrobe-host-codex main.main-surface {
 
 /* Conversation watermark: visible across task routes without obscuring content. */
 html.codedrobe-host-codex main.main-surface::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(90deg, rgba(250, 242, 225, .98) 0%, rgba(250, 242, 225, .90) 48%, rgba(250, 242, 225, .44) 76%, rgba(250, 242, 225, .28) 100%),
+    linear-gradient(
+      90deg,
+      rgba(250, 242, 225, 0.98) 0%,
+      rgba(250, 242, 225, 0.9) 48%,
+      rgba(250, 242, 225, 0.44) 76%,
+      rgba(250, 242, 225, 0.28) 100%
+    ),
     var(--codedrobe-image-hero);
   background-repeat: no-repeat;
-  background-position: center, right bottom;
-  background-size: 100% 100%, auto 68%;
-  opacity: .28;
-  filter: saturate(.78) contrast(.94);
+  background-position:
+    center,
+    right bottom;
+  background-size:
+    100% 100%,
+    auto 68%;
+  opacity: 0.28;
+  filter: saturate(0.78) contrast(0.94);
 }
 
 html.codedrobe-host-codex main.main-surface::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 7%;
   top: 84px;
@@ -156,34 +174,34 @@ html.codedrobe-host-codex main.main-surface::after {
   z-index: 0;
   border-radius: 50%;
   pointer-events: none;
-  background: rgba(167, 46, 37, .055);
-  box-shadow: 0 0 0 18px rgba(167, 46, 37, .018);
+  background: rgba(167, 46, 37, 0.055);
+  box-shadow: 0 0 0 18px rgba(167, 46, 37, 0.018);
 }
 
 html.codedrobe-host-codex main.main-surface > header,
 html.codedrobe-host-codex header.app-header-tint {
-  background: rgba(249, 239, 218, .84) !important;
-  border-bottom: 1px solid rgba(99, 69, 44, .16) !important;
+  background: rgba(249, 239, 218, 0.84) !important;
+  border-bottom: 1px solid rgba(99, 69, 44, 0.16) !important;
   color: var(--theme-ink) !important;
   backdrop-filter: blur(18px) saturate(1.04) !important;
 }
 
-html.codedrobe-host-codex [role="main"] {
+html.codedrobe-host-codex [role='main'] {
   position: relative;
   z-index: 1;
   background: transparent !important;
   color: var(--theme-ink) !important;
-  scrollbar-color: rgba(167, 46, 37, .34) transparent;
+  scrollbar-color: rgba(167, 46, 37, 0.34) transparent;
 }
 
 /* Home uses its own focused hero; do not duplicate the conversation watermark. */
 html.codedrobe-host-codex main.main-surface:has(.dream-home)::before,
-html.codedrobe-host-codex main.main-surface:has([data-testid="home-icon"])::before {
+html.codedrobe-host-codex main.main-surface:has([data-testid='home-icon'])::before {
   opacity: 0;
 }
 
 html.codedrobe-host-codex main.main-surface:has(.dream-home)::after,
-html.codedrobe-host-codex main.main-surface:has([data-testid="home-icon"])::after {
+html.codedrobe-host-codex main.main-surface:has([data-testid='home-icon'])::after {
   display: none;
 }
 
@@ -215,43 +233,72 @@ html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:
   flex: 0 1 auto !important;
   padding: 0 !important;
   overflow: visible !important;
-  border: 1px solid rgba(99, 69, 44, .28) !important;
+  border: 1px solid rgba(99, 69, 44, 0.28) !important;
   border-radius: 28px 28px 12px 28px !important;
   background-color: var(--theme-surface-light) !important;
   background-image:
-    linear-gradient(90deg, #fff9e9 0%, rgba(255, 249, 233, .98) 39%, rgba(255, 249, 233, .66) 57%, rgba(255, 249, 233, .04) 78%),
+    linear-gradient(
+      90deg,
+      #fff9e9 0%,
+      rgba(255, 249, 233, 0.98) 39%,
+      rgba(255, 249, 233, 0.66) 57%,
+      rgba(255, 249, 233, 0.04) 78%
+    ),
     var(--codedrobe-image-hero, linear-gradient(135deg, #f5ebd7, #e3d1af)) !important;
   background-repeat: no-repeat, no-repeat !important;
-  background-position: center, right center !important;
-  background-size: 100% 100%, auto 116% !important;
-  box-shadow: 0 20px 46px var(--theme-shadow), inset 0 0 0 4px rgba(255, 255, 255, .22) !important;
+  background-position:
+    center,
+    right center !important;
+  background-size:
+    100% 100%,
+    auto 116% !important;
+  box-shadow:
+    0 20px 46px var(--theme-shadow),
+    inset 0 0 0 4px rgba(255, 255, 255, 0.22) !important;
 }
 
-html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child::before {
-  content: "";
+html.codedrobe-codex-skin
+  .dream-home
+  > div:first-child
+  > div:first-child
+  > div:first-child::before {
+  content: '';
   position: absolute;
   z-index: 0;
   inset: 0 auto 0 0;
   width: 61%;
   border-radius: 27px 0 0 27px;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(255, 250, 240, .98), rgba(255, 250, 240, .87) 66%, transparent);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 250, 240, 0.98),
+    rgba(255, 250, 240, 0.87) 66%,
+    transparent
+  );
 }
 
 html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child::after {
-  content: "财神打工版";
+  content: '财神打工版';
   position: absolute;
   left: 24px;
   top: 26px;
   z-index: 0;
   pointer-events: none;
-  color: rgba(127, 33, 28, .76);
-  font: 700 13px/1 "Songti SC", "STSong", serif;
-  letter-spacing: .32em;
+  color: rgba(127, 33, 28, 0.76);
+  font:
+    700 13px/1 'Songti SC',
+    'STSong',
+    serif;
+  letter-spacing: 0.32em;
   writing-mode: vertical-rl;
 }
 
-html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child > div:first-child {
+html.codedrobe-codex-skin
+  .dream-home
+  > div:first-child
+  > div:first-child
+  > div:first-child
+  > div:first-child {
   position: relative;
   z-index: 1;
   height: 100%;
@@ -260,50 +307,67 @@ html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:
   padding-left: 64px;
 }
 
-html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
+html.codedrobe-codex-skin
+  .dream-home
+  > div:first-child
+  > div:first-child
+  > div:first-child
+  > div:first-child
+  > div:first-child {
   width: 52% !important;
   align-items: flex-start !important;
   gap: 0 !important;
 }
 
-html.codedrobe-codex-skin .dream-home [data-testid="home-icon"] {
+html.codedrobe-codex-skin .dream-home [data-testid='home-icon'] {
   display: none !important;
 }
 
-html.codedrobe-codex-skin .dream-home [data-feature="game-source"] {
+html.codedrobe-codex-skin .dream-home [data-feature='game-source'] {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
   max-width: 100% !important;
   color: var(--theme-ink) !important;
-  font: 750 clamp(23px, 2.2vw, 34px)/1.25 "Iowan Old Style", "Songti SC", serif !important;
+  font:
+    750 clamp(23px, 2.2vw, 34px)/1.25 'Iowan Old Style',
+    'Songti SC',
+    serif !important;
   text-align: left !important;
-  text-shadow: 0 1px rgba(255, 255, 255, .9);
+  text-shadow: 0 1px rgba(255, 255, 255, 0.9);
   opacity: 1 !important;
   pointer-events: auto !important;
 }
 
-html.codedrobe-codex-skin .dream-home [data-feature="game-source"]::after {
-  content: var(--dream-tagline, "今日搬砖 · 明日生财");
+html.codedrobe-codex-skin .dream-home [data-feature='game-source']::after {
+  content: var(--dream-tagline, '今日搬砖 · 明日生财');
   display: block;
   margin-top: 16px;
   color: var(--theme-accent-deep);
-  font: 650 14px/1.55 "Avenir Next", "PingFang SC", sans-serif;
-  letter-spacing: .08em;
+  font:
+    650 14px/1.55 'Avenir Next',
+    'PingFang SC',
+    sans-serif;
+  letter-spacing: 0.08em;
 }
 
-html.codedrobe-codex-skin .dream-home [data-feature="game-source"] button {
+html.codedrobe-codex-skin .dream-home [data-feature='game-source'] button {
   margin: 0 5px;
   padding: 4px 11px 5px;
-  border: 1px solid rgba(167, 46, 37, .28);
+  border: 1px solid rgba(167, 46, 37, 0.28);
   border-radius: 999px;
-  background: rgba(255, 253, 247, .78);
+  background: rgba(255, 253, 247, 0.78);
   color: var(--theme-accent-deep) !important;
   text-underline-offset: 5px;
-  box-shadow: inset 0 0 14px rgba(255, 255, 255, .72);
+  box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.72);
 }
 
-html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child > div:nth-child(2) {
+html.codedrobe-codex-skin
+  .dream-home
+  > div:first-child
+  > div:first-child
+  > div:first-child
+  > div:nth-child(2) {
   left: 16px !important;
   right: 16px !important;
   top: 100% !important;
@@ -319,15 +383,18 @@ html.codedrobe-codex-skin .dream-home .group\/home-suggestions > * {
   overflow: hidden;
   min-height: 126px !important;
   padding: 15px 13px 12px !important;
-  border: 1px solid rgba(99, 69, 44, .18) !important;
+  border: 1px solid rgba(99, 69, 44, 0.18) !important;
   border-radius: 14px 14px 7px 14px !important;
-  background: linear-gradient(rgba(255, 252, 245, .94), rgba(246, 232, 208, .90)) !important;
-  box-shadow: 0 8px 22px rgba(53, 40, 28, .07) !important;
-  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+  background: linear-gradient(rgba(255, 252, 245, 0.94), rgba(246, 232, 208, 0.9)) !important;
+  box-shadow: 0 8px 22px rgba(53, 40, 28, 0.07) !important;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease !important;
 }
 
 html.codedrobe-codex-skin .dream-home .group\/home-suggestions > *::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
@@ -336,21 +403,29 @@ html.codedrobe-codex-skin .dream-home .group\/home-suggestions > *::before {
 }
 
 html.codedrobe-codex-skin .dream-home .group\/home-suggestions > *:hover {
-  border-color: rgba(167, 46, 37, .34) !important;
-  box-shadow: 0 12px 28px rgba(53, 40, 28, .11) !important;
+  border-color: rgba(167, 46, 37, 0.34) !important;
+  box-shadow: 0 12px 28px rgba(53, 40, 28, 0.11) !important;
   transform: translateY(-2px);
 }
 
-html.codedrobe-codex-skin .dream-home div:has(> .horizontal-scroll-fade-mask .group\/project-selector) {
+html.codedrobe-codex-skin
+  .dream-home
+  div:has(> .horizontal-scroll-fade-mask .group\/project-selector) {
   position: relative;
   padding-top: 28px !important;
-  border: 1px solid rgba(99, 69, 44, .20) !important;
+  border: 1px solid rgba(99, 69, 44, 0.2) !important;
   border-bottom: 0 !important;
-  background: linear-gradient(180deg, rgba(255, 252, 245, .97), rgba(239, 222, 192, .90)) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 245, 0.97),
+    rgba(239, 222, 192, 0.9)
+  ) !important;
 }
 
-html.codedrobe-codex-skin .dream-home div:has(> .horizontal-scroll-fade-mask .group\/project-selector)::before {
-  content: "选择项目 · SELECT PROJECT";
+html.codedrobe-codex-skin
+  .dream-home
+  div:has(> .horizontal-scroll-fade-mask .group\/project-selector)::before {
+  content: '选择项目 · SELECT PROJECT';
   position: absolute;
   left: 14px;
   top: 6px;
@@ -358,31 +433,37 @@ html.codedrobe-codex-skin .dream-home div:has(> .horizontal-scroll-fade-mask .gr
   color: var(--theme-accent-deep);
   font-size: 11px;
   font-weight: 750;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   white-space: nowrap;
 }
 
 html.codedrobe-codex-skin .dream-home .group\/project-selector > button {
-  border-color: rgba(167, 46, 37, .24) !important;
-  background: rgba(255, 252, 245, .92) !important;
+  border-color: rgba(167, 46, 37, 0.24) !important;
+  background: rgba(255, 252, 245, 0.92) !important;
   color: var(--theme-accent-deep) !important;
-  box-shadow: 0 4px 12px rgba(53, 40, 28, .08) !important;
+  box-shadow: 0 4px 12px rgba(53, 40, 28, 0.08) !important;
 }
 
 html.codedrobe-host-codex .composer-surface-chrome {
-  border: 1px solid rgba(99, 69, 44, .24) !important;
+  border: 1px solid rgba(99, 69, 44, 0.24) !important;
   border-radius: 18px 18px 8px 18px !important;
-  background: rgba(255, 252, 245, .94) !important;
+  background: rgba(255, 252, 245, 0.94) !important;
   color: var(--theme-ink) !important;
-  box-shadow: 0 13px 32px rgba(53, 40, 28, .13), inset 0 1px rgba(255, 255, 255, .72) !important;
+  box-shadow:
+    0 13px 32px rgba(53, 40, 28, 0.13),
+    inset 0 1px rgba(255, 255, 255, 0.72) !important;
 }
 
 html.codedrobe-host-codex .composer-surface-chrome:focus-within {
-  border-color: rgba(167, 46, 37, .52) !important;
-  box-shadow: 0 14px 34px rgba(53, 40, 28, .14), 0 0 0 3px rgba(167, 46, 37, .08) !important;
+  border-color: rgba(167, 46, 37, 0.52) !important;
+  box-shadow:
+    0 14px 34px rgba(53, 40, 28, 0.14),
+    0 0 0 3px rgba(167, 46, 37, 0.08) !important;
 }
 
-html.codedrobe-host-codex .composer-surface-chrome :is(textarea, .ProseMirror, [contenteditable="true"]) {
+html.codedrobe-host-codex
+  .composer-surface-chrome
+  :is(textarea, .ProseMirror, [contenteditable='true']) {
   color: var(--theme-ink) !important;
   caret-color: var(--theme-accent) !important;
 }
@@ -392,9 +473,9 @@ html.codedrobe-host-codex :is(article, [data-message-author-role]) {
 }
 
 html.codedrobe-host-codex :is(pre, table, blockquote) {
-  border: 1px solid rgba(99, 69, 44, .18) !important;
+  border: 1px solid rgba(99, 69, 44, 0.18) !important;
   border-radius: 11px !important;
-  background: rgba(255, 252, 245, .78) !important;
+  background: rgba(255, 252, 245, 0.78) !important;
 }
 
 html.codedrobe-host-codex blockquote {
@@ -403,21 +484,21 @@ html.codedrobe-host-codex blockquote {
 
 html.codedrobe-host-codex pre {
   overflow: auto !important;
-  box-shadow: inset 0 1px rgba(255, 255, 255, .68) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.68) !important;
 }
 
-html.codedrobe-host-codex :is(button, [role="button"]):focus-visible,
-html.codedrobe-host-codex :is(a, input, textarea, [contenteditable="true"]):focus-visible {
-  outline: 2px solid rgba(167, 46, 37, .74) !important;
+html.codedrobe-host-codex :is(button, [role='button']):focus-visible,
+html.codedrobe-host-codex :is(a, input, textarea, [contenteditable='true']):focus-visible {
+  outline: 2px solid rgba(167, 46, 37, 0.74) !important;
   outline-offset: 2px !important;
 }
 
-html.codedrobe-host-codex :is(a, button, input, textarea, [contenteditable="true"]) {
+html.codedrobe-host-codex :is(a, button, input, textarea, [contenteditable='true']) {
   accent-color: var(--theme-accent);
 }
 
 html.codedrobe-host-codex * {
-  scrollbar-color: rgba(167, 46, 37, .34) transparent;
+  scrollbar-color: rgba(167, 46, 37, 0.34) transparent;
 }
 
 @media (max-width: 900px) {
@@ -435,25 +516,49 @@ html.codedrobe-host-codex * {
     height: 250px !important;
     min-height: 250px !important;
     background-image:
-      linear-gradient(90deg, rgba(255, 250, 240, .98), rgba(255, 250, 240, .72) 68%, rgba(255, 250, 240, .10)),
+      linear-gradient(
+        90deg,
+        rgba(255, 250, 240, 0.98),
+        rgba(255, 250, 240, 0.72) 68%,
+        rgba(255, 250, 240, 0.1)
+      ),
       var(--codedrobe-image-hero, none) !important;
-    background-position: center, right center !important;
-    background-size: 100% 100%, auto 108% !important;
+    background-position:
+      center,
+      right center !important;
+    background-size:
+      100% 100%,
+      auto 108% !important;
   }
 
-  html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child::after {
+  html.codedrobe-codex-skin
+    .dream-home
+    > div:first-child
+    > div:first-child
+    > div:first-child::after {
     display: none;
   }
 
-  html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child > div:first-child {
+  html.codedrobe-codex-skin
+    .dream-home
+    > div:first-child
+    > div:first-child
+    > div:first-child
+    > div:first-child {
     padding-left: 28px;
   }
 
-  html.codedrobe-codex-skin .dream-home > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
+  html.codedrobe-codex-skin
+    .dream-home
+    > div:first-child
+    > div:first-child
+    > div:first-child
+    > div:first-child
+    > div:first-child {
     width: 62% !important;
   }
 
-  html.codedrobe-codex-skin .dream-home [data-feature="game-source"] {
+  html.codedrobe-codex-skin .dream-home [data-feature='game-source'] {
     font-size: 20px !important;
   }
 }
@@ -462,8 +567,8 @@ html.codedrobe-host-codex * {
   html.codedrobe-host-codex *,
   html.codedrobe-host-codex *::before,
   html.codedrobe-host-codex *::after {
-    animation-duration: .01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -65,7 +65,7 @@ export function loadVisualThemeWorkspace(userId: string): VisualThemeWorkspace {
     if (!isRecord(parsed) || parsed.version !== 1) return fallback;
 
     const themeId = isWechatThemeId(asString(parsed.themeId))
-      ? asString(parsed.themeId) as WechatThemeId
+      ? (asString(parsed.themeId) as WechatThemeId)
       : fallbackThemeId;
     const savedThemes = Array.isArray(parsed.savedThemes)
       ? parsed.savedThemes
@@ -102,7 +102,9 @@ export function serializeVisualTheme(theme: ActiveVisualTheme): string {
   return JSON.stringify(payload, null, 2);
 }
 
-export function parseImportedVisualTheme(source: string): Omit<SavedVisualTheme, 'id' | 'createdAt' | 'updatedAt'> {
+export function parseImportedVisualTheme(
+  source: string,
+): Omit<SavedVisualTheme, 'id' | 'createdAt' | 'updatedAt'> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(source);
@@ -147,7 +149,10 @@ function parseSavedTheme(value: unknown): SavedVisualTheme | null {
   return { id, name, baseThemeId, settings, createdAt, updatedAt };
 }
 
-function parseActiveTheme(value: unknown, savedThemes: SavedVisualTheme[]): ActiveVisualTheme | null {
+function parseActiveTheme(
+  value: unknown,
+  savedThemes: SavedVisualTheme[],
+): ActiveVisualTheme | null {
   if (!isRecord(value)) return null;
   const baseThemeId = asString(value.baseThemeId);
   const settings = parseVisualThemeSettings(value.settings);
@@ -157,9 +162,10 @@ function parseActiveTheme(value: unknown, savedThemes: SavedVisualTheme[]): Acti
   const savedTheme = savedId ? savedThemes.find((theme) => theme.id === savedId) : undefined;
   return {
     baseThemeId,
-    name: typeof value.name === 'string'
-      ? normalizeName(value.name, savedTheme?.name ?? '我的主题')
-      : savedTheme?.name ?? '我的主题',
+    name:
+      typeof value.name === 'string'
+        ? normalizeName(value.name, savedTheme?.name ?? '我的主题')
+        : (savedTheme?.name ?? '我的主题'),
     ...(savedId ? { savedId } : {}),
     settings,
   };
@@ -190,4 +196,3 @@ function asString(value: unknown) {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-

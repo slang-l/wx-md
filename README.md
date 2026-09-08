@@ -33,6 +33,14 @@ wx-md/
 认证模块的设计依据、Token 生命周期、完整接口示例和生产部署注意事项见
 [`docs/authentication.md`](docs/authentication.md)。
 
+## 代码格式化
+
+在仓库根目录执行 `pnpm format`，即可一键格式化项目代码；执行 `pnpm format:check` 可以只检查格式，不修改文件。
+
+项目使用 Prettier，采用 2 空格缩进、单引号、分号、100 字符行宽和 LF 换行。第三方 BlockSuite 源码、锁文件、构建产物及临时文件不参与格式化。
+
+VS Code 安装工作区推荐的 **Prettier - Code formatter** 扩展后，保存时会自动格式化，也可使用“格式化文档”命令（Windows：`Shift+Alt+F`）。
+
 ## 环境要求
 
 - Node.js 20.12+（不使用 Node.js 21），或 Node.js 22+
@@ -94,14 +102,14 @@ pnpm db:up
 
 该命令会启动 `postgres:17-alpine`，等待健康检查通过，并在本机开放 `5432` 端口。开发环境默认连接信息为：
 
-| 项目 | 值 |
-| --- | --- |
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `wxmd` |
-| User | `wxmd` |
-| Password | `wxmd` |
-| URL | `postgresql://wxmd:wxmd@localhost:5432/wxmd` |
+| 项目     | 值                                           |
+| -------- | -------------------------------------------- |
+| Host     | `localhost`                                  |
+| Port     | `5432`                                       |
+| Database | `wxmd`                                       |
+| User     | `wxmd`                                       |
+| Password | `wxmd`                                       |
+| URL      | `postgresql://wxmd:wxmd@localhost:5432/wxmd` |
 
 数据库文件保存在 Docker 命名卷中，执行 `pnpm db:down` 后仍会保留。
 
@@ -129,11 +137,11 @@ pnpm dev
 
 开发环境启动 API 时还会幂等初始化一个最高权限账号：
 
-| 项目 | 默认值 |
-| --- | --- |
+| 项目 | 默认值         |
+| ---- | -------------- |
 | 邮箱 | `admin@qq.com` |
-| 密码 | `123456` |
-| 角色 | `admin` |
+| 密码 | `123456`       |
+| 角色 | `admin`        |
 
 该账号只在 `NODE_ENV=development` 中启用。若数据库里已经存在同邮箱用户，启动时会
 将其校正为启用的 `admin` 并同步开发密码；生产环境禁止启用这组默认凭据。
@@ -142,35 +150,35 @@ pnpm dev
 
 服务端读取 `apps/api/.env`。完整模板见 [`apps/api/.env.example`](apps/api/.env.example)。
 
-| 变量 | 示例或默认值 | 说明 |
-| --- | --- | --- |
-| `NODE_ENV` | `development` | `development`、`test` 或 `production` |
-| `HOST` | `0.0.0.0` | API 监听地址 |
-| `PORT` | `3000` | API 监听端口 |
-| `CORS_ORIGINS` | `http://localhost:5173` | 允许携带凭据的前端来源，多个来源用逗号分隔 |
-| `DATABASE_URL` | `postgresql://wxmd:wxmd@localhost:5432/wxmd` | PostgreSQL 连接字符串 |
-| `JWT_ACCESS_SECRET` | 无 | JWT HMAC 签名密钥，必填且至少 32 个字符 |
-| `JWT_ISSUER` | `wx-md-api` | Access Token 的签发者 |
-| `JWT_AUDIENCE` | `wx-md-web` | Access Token 的接收方 |
-| `ACCESS_TOKEN_TTL` | `15m` | Access Token 有效期，范围为 60 秒至 1 天 |
-| `REFRESH_TOKEN_TTL_DAYS` | `7` | Refresh Token 有效天数，范围为 1 至 90 天 |
-| `DEV_ADMIN_ENABLED` | `true`（仅开发） | 是否初始化本地管理员；非开发环境禁止为 `true` |
-| `DEV_ADMIN_EMAIL` | `admin@qq.com` | 本地管理员邮箱 |
-| `DEV_ADMIN_PASSWORD` | `123456` | 本地管理员密码，不得用于生产 |
-| `DEV_ADMIN_NAME` | `系统管理员` | 本地管理员显示名称 |
+| 变量                     | 示例或默认值                                 | 说明                                          |
+| ------------------------ | -------------------------------------------- | --------------------------------------------- |
+| `NODE_ENV`               | `development`                                | `development`、`test` 或 `production`         |
+| `HOST`                   | `0.0.0.0`                                    | API 监听地址                                  |
+| `PORT`                   | `3000`                                       | API 监听端口                                  |
+| `CORS_ORIGINS`           | `http://localhost:5173`                      | 允许携带凭据的前端来源，多个来源用逗号分隔    |
+| `DATABASE_URL`           | `postgresql://wxmd:wxmd@localhost:5432/wxmd` | PostgreSQL 连接字符串                         |
+| `JWT_ACCESS_SECRET`      | 无                                           | JWT HMAC 签名密钥，必填且至少 32 个字符       |
+| `JWT_ISSUER`             | `wx-md-api`                                  | Access Token 的签发者                         |
+| `JWT_AUDIENCE`           | `wx-md-web`                                  | Access Token 的接收方                         |
+| `ACCESS_TOKEN_TTL`       | `15m`                                        | Access Token 有效期，范围为 60 秒至 1 天      |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                                          | Refresh Token 有效天数，范围为 1 至 90 天     |
+| `DEV_ADMIN_ENABLED`      | `true`（仅开发）                             | 是否初始化本地管理员；非开发环境禁止为 `true` |
+| `DEV_ADMIN_EMAIL`        | `admin@qq.com`                               | 本地管理员邮箱                                |
+| `DEV_ADMIN_PASSWORD`     | `123456`                                     | 本地管理员密码，不得用于生产                  |
+| `DEV_ADMIN_NAME`         | `系统管理员`                                 | 本地管理员显示名称                            |
 
 生产环境不要使用 `compose.yaml` 中的开发密码，也不要提交 `.env`。生产前端地址还需要加入 `CORS_ORIGINS`，并使用 HTTPS。
 
 ## 鉴权 API
 
-| 方法 | 路径 | 凭据 | 成功状态 | 用途 |
-| --- | --- | --- | --- | --- |
-| `POST` | `/api/auth/register` | 无 | `201` | 注册账号并创建会话 |
-| `POST` | `/api/auth/login` | 无 | `200` | 使用邮箱和密码登录 |
-| `POST` | `/api/auth/refresh` | Refresh Cookie | `200` | 轮换 Refresh Token 并签发新的 Access Token；不延长会话绝对过期时间 |
-| `POST` | `/api/auth/logout` | Refresh Cookie（可选） | `204` | 撤销当前会话并清除 Cookie，可重复调用 |
-| `GET` | `/api/auth/me` | Bearer Token | `200` | 获取当前用户 |
-| `GET` | `/api/health` | 无 | `200` | 服务健康检查 |
+| 方法   | 路径                 | 凭据                   | 成功状态 | 用途                                                               |
+| ------ | -------------------- | ---------------------- | -------- | ------------------------------------------------------------------ |
+| `POST` | `/api/auth/register` | 无                     | `201`    | 注册账号并创建会话                                                 |
+| `POST` | `/api/auth/login`    | 无                     | `200`    | 使用邮箱和密码登录                                                 |
+| `POST` | `/api/auth/refresh`  | Refresh Cookie         | `200`    | 轮换 Refresh Token 并签发新的 Access Token；不延长会话绝对过期时间 |
+| `POST` | `/api/auth/logout`   | Refresh Cookie（可选） | `204`    | 撤销当前会话并清除 Cookie，可重复调用                              |
+| `GET`  | `/api/auth/me`       | Bearer Token           | `200`    | 获取当前用户                                                       |
+| `GET`  | `/api/health`        | 无                     | `200`    | 服务健康检查                                                       |
 
 注册请求：
 
@@ -242,19 +250,19 @@ Authorization: Bearer <access-token>
 
 ## 常用命令
 
-| 命令 | 作用 |
-| --- | --- |
-| `pnpm dev` | 并行启动 Web 和 API |
-| `pnpm dev:web` | 只启动 Web |
-| `pnpm dev:api` | 只启动 API |
-| `pnpm db:up` | 启动并等待 PostgreSQL 健康 |
-| `pnpm db:down` | 停止 PostgreSQL，保留数据卷 |
-| `pnpm db:migrate` | 执行 API 数据库迁移 |
-| `pnpm typecheck` | 检查所有应用的 TypeScript 类型 |
-| `pnpm test` | 运行所有应用测试 |
-| `pnpm build` | 构建所有应用 |
-| `pnpm check` | 依次执行类型检查、测试和构建 |
-| `pnpm --filter @wx-md/api start` | 启动已构建的 API |
+| 命令                             | 作用                           |
+| -------------------------------- | ------------------------------ |
+| `pnpm dev`                       | 并行启动 Web 和 API            |
+| `pnpm dev:web`                   | 只启动 Web                     |
+| `pnpm dev:api`                   | 只启动 API                     |
+| `pnpm db:up`                     | 启动并等待 PostgreSQL 健康     |
+| `pnpm db:down`                   | 停止 PostgreSQL，保留数据卷    |
+| `pnpm db:migrate`                | 执行 API 数据库迁移            |
+| `pnpm typecheck`                 | 检查所有应用的 TypeScript 类型 |
+| `pnpm test`                      | 运行所有应用测试               |
+| `pnpm build`                     | 构建所有应用                   |
+| `pnpm check`                     | 依次执行类型检查、测试和构建   |
+| `pnpm --filter @wx-md/api start` | 启动已构建的 API               |
 
 提交前建议运行：
 

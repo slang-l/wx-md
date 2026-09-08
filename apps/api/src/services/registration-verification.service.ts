@@ -95,11 +95,7 @@ export function createRegistrationVerificationService(
 
       if (now() >= pending.expiresAt) {
         pendingByEmail.delete(normalizedEmail);
-        throw new AppError(
-          400,
-          'VERIFICATION_CODE_EXPIRED',
-          'Verification code has expired',
-        );
+        throw new AppError(400, 'VERIFICATION_CODE_EXPIRED', 'Verification code has expired');
       }
 
       const suppliedHash = hashCode(normalizedEmail, code);
@@ -115,11 +111,7 @@ export function createRegistrationVerificationService(
           );
         }
 
-        throw new AppError(
-          400,
-          'INVALID_VERIFICATION_CODE',
-          'Verification code is invalid',
-        );
+        throw new AppError(400, 'INVALID_VERIFICATION_CODE', 'Verification code is invalid');
       }
     },
 

@@ -78,12 +78,11 @@ export function createPostgresBrandAssetRepository(pool: Pool): BrandAssetReposi
     },
 
     async delete(userId, assetId) {
-      const result = await pool.query(
-        'DELETE FROM brand_assets WHERE user_id = $1 AND id = $2',
-        [userId, assetId],
-      );
+      const result = await pool.query('DELETE FROM brand_assets WHERE user_id = $1 AND id = $2', [
+        userId,
+        assetId,
+      ]);
       return result.rowCount === 1;
     },
   };
 }
-

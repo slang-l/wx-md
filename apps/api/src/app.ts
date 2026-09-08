@@ -2,11 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express, {
-  type ErrorRequestHandler,
-  type Express,
-  type RequestHandler,
-} from 'express';
+import express, { type ErrorRequestHandler, type Express, type RequestHandler } from 'express';
 import helmet from 'helmet';
 
 import { loadConfig, type AppConfig } from './config.js';
@@ -77,29 +73,27 @@ export function registerErrorHandlers(
   logger: Pick<Console, 'error'> | false = console,
 ): void {
   app.use((_request, response) => {
-    response.status(404).json(
-      createErrorResponse(
-        response.locals.requestId,
-        'NOT_FOUND',
-        'The requested resource was not found',
-      ),
-    );
+    response
+      .status(404)
+      .json(
+        createErrorResponse(
+          response.locals.requestId,
+          'NOT_FOUND',
+          'The requested resource was not found',
+        ),
+      );
   });
 
   const errorHandler: ErrorRequestHandler = (error: ErrorWithStatus, request, response, _next) => {
     const id = response.locals.requestId ?? requestId(request);
 
     if (error instanceof AppError) {
-      response
-        .status(error.statusCode)
-        .json(createErrorResponse(id, error.code, error.message));
+      response.status(error.statusCode).json(createErrorResponse(id, error.code, error.message));
       return;
     }
 
     if (error instanceof UpstreamServiceError) {
-      response
-        .status(error.statusCode)
-        .json(createErrorResponse(id, error.code, error.message));
+      response.status(error.statusCode).json(createErrorResponse(id, error.code, error.message));
       return;
     }
 
@@ -131,8 +125,9 @@ export function buildApp(options: BuildAppOptions = {}): Express {
   const brandAssetRepository = options.brandAssetRepository ?? createMemoryBrandAssetRepository();
   const wechatRepository = options.wechatRepository ?? createMemoryWechatRepository();
   const tokenService = createTokenService(config);
-  const registrationVerificationService = options.registrationVerificationService
-    ?? createRegistrationVerificationService({
+  const registrationVerificationService =
+    options.registrationVerificationService ??
+    createRegistrationVerificationService({
       // Brevo 接入前仅在开发/测试响应中暴露验证码，生产响应绝不包含测试码。
       exposeTestCode: config.nodeEnv !== 'production',
     });
@@ -155,16 +150,21 @@ export function buildApp(options: BuildAppOptions = {}): Express {
   app.disable('x-powered-by');
   app.use(createRequestIdMiddleware());
   app.use(helmet());
-  app.use(cors({
-    origin: config.corsOrigins,
-    credentials: true,
-  }));
+  app.use(
+    cors({
+      origin: config.corsOrigins,
+      credentials: true,
+    }),
+  );
   app.use(cookieParser());
   app.use(express.json({ limit: '16mb' }));
   app.use(express.urlencoded({ extended: true, limit: '16mb' }));
   app.use('/api', healthRouter);
   app.use('/api/auth', createAuthRouter({ config, authService, requireAuth }));
-  app.use('/api/brand-assets', createBrandAssetRouter({ config, requireAuth, service: brandAssetService }));
+  app.use(
+    '/api/brand-assets',
+    createBrandAssetRouter({ config, requireAuth, service: brandAssetService }),
+  );
   app.use('/api/wechat', createWechatRouter({ config, requireAuth, wechatService }));
   registerErrorHandlers(app, logger);
 

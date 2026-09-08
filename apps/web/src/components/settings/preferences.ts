@@ -76,7 +76,10 @@ export function saveSettingsPreferences(userId: string, preferences: SettingsPre
   if (typeof window === 'undefined') return false;
 
   try {
-    window.localStorage.setItem(getSettingsStorageKey(userId), JSON.stringify(normalizePreferences(preferences)));
+    window.localStorage.setItem(
+      getSettingsStorageKey(userId),
+      JSON.stringify(normalizePreferences(preferences)),
+    );
     return true;
   } catch {
     return false;
@@ -138,8 +141,7 @@ export function downloadSettingsJson(user: SettingsUser, preferences: SettingsPr
 }
 
 type PreferenceUpdater =
-  | SettingsPreferences
-  | ((current: SettingsPreferences) => SettingsPreferences);
+  SettingsPreferences | ((current: SettingsPreferences) => SettingsPreferences);
 
 export function useSettingsPreferences(userId: string) {
   const [preferences, setPreferencesState] = useState<SettingsPreferences>(() =>

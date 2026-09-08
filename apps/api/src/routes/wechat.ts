@@ -6,54 +6,76 @@ import { AppError } from '../errors.js';
 import type { WechatService } from '../services/wechat.service.js';
 import { createVerifyRequestOrigin } from './auth.js';
 
-const imageSchema = z.object({
-  data: z.string().min(4).max(7_000_000),
-  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif']),
-  filename: z.string().trim().min(1).max(120),
-}).strict();
+const imageSchema = z
+  .object({
+    data: z.string().min(4).max(7_000_000),
+    mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif']),
+    filename: z.string().trim().min(1).max(120),
+  })
+  .strict();
 
-const saveConfigSchema = z.object({
-  appId: z.string().trim().regex(/^wx[A-Za-z0-9]{16}$/),
-  appSecret: z.string().trim().min(16).max(128),
-  defaultAuthor: z.string().trim().max(32),
-  defaultDigest: z.string().trim().max(120),
-}).strict();
+const saveConfigSchema = z
+  .object({
+    appId: z
+      .string()
+      .trim()
+      .regex(/^wx[A-Za-z0-9]{16}$/),
+    appSecret: z.string().trim().min(16).max(128),
+    defaultAuthor: z.string().trim().max(32),
+    defaultDigest: z.string().trim().max(120),
+  })
+  .strict();
 
-const publishArticleSchema = z.object({
-  title: z.string().trim().min(1).max(64),
-  author: z.string().trim().max(32),
-  digest: z.string().trim().max(120),
-  content: z.string().trim().min(1).max(1_000_000),
-  sourceUrl: z.string().trim().url().max(1_024).optional(),
-  coverImage: imageSchema,
-  contentImages: z.array(imageSchema.extend({
-    placeholder: z.string().regex(/^wxmd-image:\/\/\d+$/),
-  }).strict()).max(20),
-  showCoverPic: z.boolean(),
-  needOpenComment: z.boolean(),
-  onlyFansCanComment: z.boolean(),
-}).strict().superRefine((value, context) => {
-  const encodedImageBytes = value.coverImage.data.length
-    + value.contentImages.reduce((total, image) => total + image.data.length, 0);
-  if (encodedImageBytes > 14_000_000) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Encoded images exceed the request limit',
-      path: ['contentImages'],
-    });
-  }
+const publishArticleSchema = z
+  .object({
+    title: z.string().trim().min(1).max(64),
+    author: z.string().trim().max(32),
+    digest: z.string().trim().max(120),
+    content: z.string().trim().min(1).max(1_000_000),
+    sourceUrl: z.string().trim().url().max(1_024).optional(),
+    coverImage: imageSchema,
+    contentImages: z
+      .array(
+        imageSchema
+          .extend({
+            placeholder: z.string().regex(/^wxmd-image:\/\/\d+$/),
+          })
+          .strict(),
+      )
+      .max(20),
+    showCoverPic: z.boolean(),
+    needOpenComment: z.boolean(),
+    onlyFansCanComment: z.boolean(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const encodedImageBytes =
+      value.coverImage.data.length +
+      value.contentImages.reduce((total, image) => total + image.data.length, 0);
+    if (encodedImageBytes > 14_000_000) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Encoded images exceed the request limit',
+        path: ['contentImages'],
+      });
+    }
 
-  const placeholders = new Set(value.contentImages.map((image) => image.placeholder));
-  if (placeholders.size !== value.contentImages.length) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Content image placeholders must be unique',
-      path: ['contentImages'],
-    });
-  }
-});
+    const placeholders = new Set(value.contentImages.map((image) => image.placeholder));
+    if (placeholders.size !== value.contentImages.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Content image placeholders must be unique',
+        path: ['contentImages'],
+      });
+    }
+  });
 
-const publishIdSchema = z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const publishIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9_-]+$/);
 
 export interface CreateWechatRouterOptions {
   config: AppConfig;

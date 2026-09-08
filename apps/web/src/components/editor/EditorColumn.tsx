@@ -52,7 +52,8 @@ export function EditorColumn({
   );
 
   const handleInsertComponent = useCallback((component: ContentComponentDefinition) => {
-    const inserted = editorRef.current?.insertBlocks(createContentComponentBlocks(component)) ?? false;
+    const inserted =
+      editorRef.current?.insertBlocks(createContentComponentBlocks(component)) ?? false;
     setToast(
       inserted
         ? { message: `已插入「${component.name}」`, tone: 'success' }
@@ -62,13 +63,16 @@ export function EditorColumn({
   }, []);
 
   const handleInsertBrandAsset = useCallback((asset: BrandAsset) => {
-    const inserted = editorRef.current?.insertBlocks([{
-      id: crypto.randomUUID(),
-      type: 'image',
-      url: asset.dataUrl,
-      alt: asset.name,
-      caption: asset.name,
-    }]) ?? false;
+    const inserted =
+      editorRef.current?.insertBlocks([
+        {
+          id: crypto.randomUUID(),
+          type: 'image',
+          url: asset.dataUrl,
+          alt: asset.name,
+          caption: asset.name,
+        },
+      ]) ?? false;
     setToast(
       inserted
         ? { message: `已插入「${asset.name}」`, tone: 'success' }

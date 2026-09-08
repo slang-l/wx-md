@@ -1,9 +1,4 @@
-import type {
-  PublicUser,
-  RefreshSession,
-  User,
-  UserRole,
-} from '../type/auth.js';
+import type { PublicUser, RefreshSession, User, UserRole } from '../type/auth.js';
 
 export interface CreateUserInput {
   email: string;
@@ -21,10 +16,7 @@ export interface CreateRefreshSessionInput {
   userAgent: string | null;
 }
 
-export type CreateInitialRefreshSessionInput = Omit<
-  CreateRefreshSessionInput,
-  'userId'
->;
+export type CreateInitialRefreshSessionInput = Omit<CreateRefreshSessionInput, 'userId'>;
 
 /**
  * A rotated session inherits its user, family and absolute expiry from the
@@ -51,10 +43,7 @@ export interface AuthRepository {
   findUserById(userId: string): Promise<User | null>;
   createRefreshSession(input: CreateRefreshSessionInput): Promise<RefreshSession>;
   findRefreshSessionByTokenHash(tokenHash: string): Promise<RefreshSession | null>;
-  revokeRefreshSession(
-    tokenHash: string,
-    replacedByHash?: string | null,
-  ): Promise<void>;
+  revokeRefreshSession(tokenHash: string, replacedByHash?: string | null): Promise<void>;
   /** Revokes the complete session family containing the supplied token. */
   revokeRefreshFamilyByTokenHash(tokenHash: string): Promise<void>;
   revokeRefreshFamily(familyId: string): Promise<void>;
@@ -63,10 +52,7 @@ export interface AuthRepository {
    * Atomically consumes an active, unexpired refresh session and inserts its
    * replacement. Returns false when the current token can no longer be used.
    */
-  rotateRefreshSession(
-    currentHash: string,
-    nextInput: RotateRefreshSessionInput,
-  ): Promise<boolean>;
+  rotateRefreshSession(currentHash: string, nextInput: RotateRefreshSessionInput): Promise<boolean>;
 }
 
 /** Explicitly selects fields that are safe to expose to API consumers. */

@@ -1,11 +1,6 @@
 import { Buffer } from 'node:buffer';
 
-import {
-  Router,
-  type CookieOptions,
-  type Request,
-  type RequestHandler,
-} from 'express';
+import { Router, type CookieOptions, type Request, type RequestHandler } from 'express';
 import { z } from 'zod';
 
 import type { AppConfig } from '../config.js';
@@ -37,7 +32,10 @@ const registerSchema = z
   .object({
     email: emailSchema,
     password: registrationPasswordSchema,
-    verificationCode: z.string().trim().regex(/^\d{6}$/),
+    verificationCode: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/),
     name: z.string().trim().min(1).max(80).optional(),
   })
   .strict();

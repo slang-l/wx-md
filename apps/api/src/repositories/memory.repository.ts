@@ -105,7 +105,7 @@ export function createMemoryAuthRepository(): AuthRepository {
 
     async findUserByEmail(email) {
       const userId = userIdByEmail.get(email.toLowerCase().trim());
-      return userId ? users.get(userId) ?? null : null;
+      return userId ? (users.get(userId) ?? null) : null;
     },
 
     async findUserById(userId) {

@@ -68,11 +68,15 @@ export const useDocsStore = create<DocsState>()(
 
             const firstBlock = doc.blocks[0];
             const shouldSyncLegacyTitle =
-              firstBlock?.type === 'heading' && firstBlock.level === 1 && firstBlock.text?.trim() === doc.title.trim();
+              firstBlock?.type === 'heading' &&
+              firstBlock.level === 1 &&
+              firstBlock.text?.trim() === doc.title.trim();
 
             return touchDoc(doc, {
               title,
-              blocks: shouldSyncLegacyTitle ? [{ ...firstBlock, text: title }, ...doc.blocks.slice(1)] : doc.blocks,
+              blocks: shouldSyncLegacyTitle
+                ? [{ ...firstBlock, text: title }, ...doc.blocks.slice(1)]
+                : doc.blocks,
             });
           }),
         }));

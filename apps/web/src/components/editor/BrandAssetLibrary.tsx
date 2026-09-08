@@ -78,10 +78,7 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
     return assets.filter((asset) => {
       if (category !== 'all' && asset.category !== category) return false;
       if (!normalizedQuery) return true;
-      return [asset.name, ...asset.tags]
-        .join(' ')
-        .toLocaleLowerCase()
-        .includes(normalizedQuery);
+      return [asset.name, ...asset.tags].join(' ').toLocaleLowerCase().includes(normalizedQuery);
     });
   }, [assets, category, query]);
 
@@ -186,12 +183,13 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
     setSaving(true);
     setError('');
     try {
-      const saved = draft.mode === 'create'
-        ? await createBrandAsset(metadata, {
-            dataUrl: draft.dataUrl ?? '',
-            mimeType: draft.mimeType ?? 'image/png',
-          })
-        : await updateBrandAsset(draft.assetId ?? '', metadata);
+      const saved =
+        draft.mode === 'create'
+          ? await createBrandAsset(metadata, {
+              dataUrl: draft.dataUrl ?? '',
+              mimeType: draft.mimeType ?? 'image/png',
+            })
+          : await updateBrandAsset(draft.assetId ?? '', metadata);
       setAssets((current) => [saved, ...current.filter((asset) => asset.id !== saved.id)]);
       setDraft(null);
     } catch (cause) {
@@ -238,12 +236,17 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
       >
         <header className="content-library-header">
           <div className="content-library-heading">
-            <span className="content-library-heading-icon brand-asset-heading-icon" aria-hidden="true">
+            <span
+              className="content-library-heading-icon brand-asset-heading-icon"
+              aria-hidden="true"
+            >
               <Images size={19} />
             </span>
             <div>
               <h2 id="brand-asset-title">品牌素材库</h2>
-              <p>{assets.length} / {limit} 张图片</p>
+              <p>
+                {assets.length} / {limit} 张图片
+              </p>
             </div>
           </div>
           <button
@@ -347,12 +350,17 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
                     }}
                   >
                     <img src={asset.dataUrl} alt="" />
-                    <span><Plus size={15} />插入文章</span>
+                    <span>
+                      <Plus size={15} />
+                      插入文章
+                    </span>
                   </button>
                   <div className="brand-asset-card-info">
                     <div>
                       <strong title={asset.name}>{asset.name}</strong>
-                      <small>{categoryLabel(asset.category)} · {formatFileSize(asset.sizeBytes)}</small>
+                      <small>
+                        {categoryLabel(asset.category)} · {formatFileSize(asset.sizeBytes)}
+                      </small>
                     </div>
                     <div className="brand-asset-card-actions">
                       <button
@@ -377,20 +385,32 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
                         className={confirmDeleteId === asset.id ? 'is-confirming' : ''}
                         type="button"
                         title={confirmDeleteId === asset.id ? '再次点击确认删除' : '删除素材'}
-                        aria-label={confirmDeleteId === asset.id ? `确认删除 ${asset.name}` : `删除 ${asset.name}`}
+                        aria-label={
+                          confirmDeleteId === asset.id
+                            ? `确认删除 ${asset.name}`
+                            : `删除 ${asset.name}`
+                        }
                         disabled={deletingId === asset.id}
-                        onBlur={() => setConfirmDeleteId((current) => current === asset.id ? null : current)}
+                        onBlur={() =>
+                          setConfirmDeleteId((current) => (current === asset.id ? null : current))
+                        }
                         onClick={() => void handleDelete(asset.id)}
                       >
-                        {deletingId === asset.id
-                          ? <LoaderCircle className="animate-spin" size={14} />
-                          : confirmDeleteId === asset.id ? <Check size={14} /> : <Trash2 size={14} />}
+                        {deletingId === asset.id ? (
+                          <LoaderCircle className="animate-spin" size={14} />
+                        ) : confirmDeleteId === asset.id ? (
+                          <Check size={14} />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
                       </button>
                     </div>
                   </div>
                   {asset.tags.length > 0 ? (
                     <div className="brand-asset-tags" aria-label="素材标签">
-                      {asset.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}
+                      {asset.tags.slice(0, 3).map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
                     </div>
                   ) : null}
                 </article>
@@ -400,10 +420,17 @@ export function BrandAssetLibrary({ open, onInsert, onOpenChange }: BrandAssetLi
             <div className="content-library-empty">
               <Images size={21} />
               <strong>{assets.length === 0 ? '还没有品牌素材' : '没有找到相关素材'}</strong>
-              <span>{assets.length === 0 ? '上传常用图片，写作时可直接插入' : '换一个关键词或分类试试'}</span>
+              <span>
+                {assets.length === 0 ? '上传常用图片，写作时可直接插入' : '换一个关键词或分类试试'}
+              </span>
               {assets.length === 0 && !draft ? (
-                <button className="brand-asset-empty-upload" type="button" onClick={() => fileInputRef.current?.click()}>
-                  <Upload size={15} />上传图片
+                <button
+                  className="brand-asset-empty-upload"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload size={15} />
+                  上传图片
                 </button>
               ) : null}
             </div>
@@ -429,8 +456,13 @@ function AssetDraftEditor({
   onSave: () => void;
 }) {
   return (
-    <section className="brand-asset-editor" aria-label={draft.mode === 'create' ? '添加素材' : '编辑素材'}>
-      {draft.dataUrl ? <img className="brand-asset-editor-preview" src={draft.dataUrl} alt="" /> : null}
+    <section
+      className="brand-asset-editor"
+      aria-label={draft.mode === 'create' ? '添加素材' : '编辑素材'}
+    >
+      {draft.dataUrl ? (
+        <img className="brand-asset-editor-preview" src={draft.dataUrl} alt="" />
+      ) : null}
       <label>
         <span>名称</span>
         <input
@@ -444,10 +476,14 @@ function AssetDraftEditor({
         <span>分类</span>
         <select
           value={draft.category}
-          onChange={(event) => onChange({ ...draft, category: event.target.value as BrandAssetCategory })}
+          onChange={(event) =>
+            onChange({ ...draft, category: event.target.value as BrandAssetCategory })
+          }
         >
           {brandAssetCategories.map((item) => (
-            <option key={item} value={item}>{categoryLabel(item)}</option>
+            <option key={item} value={item}>
+              {categoryLabel(item)}
+            </option>
           ))}
         </select>
       </label>
@@ -467,7 +503,9 @@ function AssetDraftEditor({
         />
       </label>
       <div className="brand-asset-editor-actions">
-        <button type="button" onClick={onCancel}>取消</button>
+        <button type="button" onClick={onCancel}>
+          取消
+        </button>
         <button className="is-primary" type="button" disabled={saving} onClick={onSave}>
           {saving ? <LoaderCircle className="animate-spin" size={14} /> : <Check size={14} />}
           保存
@@ -478,12 +516,14 @@ function AssetDraftEditor({
 }
 
 function draftToMetadata(draft: AssetDraft): BrandAssetMetadata {
-  const tags = [...new Set(
-    draft.tagsText
-      .split(/[,，]/)
-      .map((tag) => tag.trim().toLocaleLowerCase().slice(0, 20))
-      .filter(Boolean),
-  )].slice(0, 8);
+  const tags = [
+    ...new Set(
+      draft.tagsText
+        .split(/[,，]/)
+        .map((tag) => tag.trim().toLocaleLowerCase().slice(0, 20))
+        .filter(Boolean),
+    ),
+  ].slice(0, 8);
 
   return {
     name: draft.name.trim().slice(0, 80),

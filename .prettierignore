@@ -1,0 +1,29 @@
+# Dependencies, vendored source and generated files
+node_modules/
+packages/blocksuite/
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+pnpm-lock.yaml
+package-lock.json
+
+# Local caches, previews and runtime data
+.pnpm-store/
+.vite/
+.vite-temp/
+.cache/
+.turbo/
+.tmp*/
+tmp/
+temp/
+test-results/
+playwright-report/
+blob-report/
+apps/api/data/
+apps/api/uploads/
+.codex/
+.agents/
+.env*
+*.log

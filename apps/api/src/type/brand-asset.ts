@@ -33,4 +33,3 @@ export interface UpdateBrandAssetInput {
   category: BrandAssetCategory;
   tags: string[];
 }
-

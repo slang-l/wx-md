@@ -144,7 +144,11 @@ function makeMockDocument({
       { id: `${id}-heading`, type: 'heading', level: 1, text: title },
       { id: `${id}-summary`, type: 'paragraph', text: summary },
       { id: `${id}-notes-heading`, type: 'heading', level: 2, text: 'Notes' },
-      { id: `${id}-notes`, type: 'paragraph', text: 'Type here to add context, decisions, and next steps.' },
+      {
+        id: `${id}-notes`,
+        type: 'paragraph',
+        text: 'Type here to add context, decisions, and next steps.',
+      },
     ],
   };
 }

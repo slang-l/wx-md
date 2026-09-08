@@ -57,4 +57,3 @@ function cloneAsset(asset: BrandAsset): BrandAsset {
     updatedAt: new Date(asset.updatedAt),
   };
 }
-

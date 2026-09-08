@@ -159,10 +159,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       const user = isLogin
         ? await login({ email, password: form.password })
         : await register({
-          email,
-          password: form.password,
-          verificationCode: form.verificationCode,
-        });
+            email,
+            password: form.password,
+            verificationCode: form.verificationCode,
+          });
       await onAuthenticated(user);
     } catch (submitError) {
       setError(getAuthErrorMessage(submitError, isLogin));
@@ -174,11 +174,18 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   return (
     <main className="auth-page relative min-h-[100dvh] overflow-x-hidden bg-[var(--ui-background)] text-[var(--ui-text)]">
       <div className="auth-page-grid pointer-events-none absolute inset-0" aria-hidden="true" />
-      <div className="pointer-events-none absolute -left-32 top-[28%] h-72 w-72 rounded-full bg-[var(--ui-primary-soft)] opacity-80 blur-3xl" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute -left-32 top-[28%] h-72 w-72 rounded-full bg-[var(--ui-primary-soft)] opacity-80 blur-3xl"
+        aria-hidden="true"
+      />
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1220px] flex-col px-5 py-5 sm:px-8 lg:px-10 lg:py-7">
         <header className="flex items-center justify-between">
-          <a className="flex items-center gap-2.5 text-[var(--ui-text)] no-underline" href="/" aria-label="Block Notes 首页">
+          <a
+            className="flex items-center gap-2.5 text-[var(--ui-text)] no-underline"
+            href="/"
+            aria-label="Block Notes 首页"
+          >
             <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[#292722] text-[#fffefa] shadow-[0_8px_18px_rgba(35,33,28,0.16)]">
               <PenLine size={18} strokeWidth={1.9} />
             </span>
@@ -201,7 +208,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-[var(--ui-primary)]">
                 {isLogin ? '继续你的创作' : '建立你的创作空间'}
               </p>
-              <h1 id="auth-title" className="m-0 text-[30px] font-semibold tracking-[-0.045em] text-[var(--ui-text)]">
+              <h1
+                id="auth-title"
+                className="m-0 text-[30px] font-semibold tracking-[-0.045em] text-[var(--ui-text)]"
+              >
                 {isLogin ? '欢迎回来' : '创建你的账号'}
               </h1>
               <p className="mb-0 mt-2 text-sm leading-6 text-[var(--ui-text-secondary)]">
@@ -209,13 +219,29 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               </p>
             </div>
 
-            <div className="mb-6 grid grid-cols-2 rounded-[10px] bg-[var(--ui-surface-subtle)] p-1" aria-label="登录或注册">
-              <ModeButton active={isLogin} disabled={isSubmitting || isRequestingCode} label="登录" onClick={() => switchMode('login')} />
-              <ModeButton active={!isLogin} disabled={isSubmitting || isRequestingCode} label="注册" onClick={() => switchMode('register')} />
+            <div
+              className="mb-6 grid grid-cols-2 rounded-[10px] bg-[var(--ui-surface-subtle)] p-1"
+              aria-label="登录或注册"
+            >
+              <ModeButton
+                active={isLogin}
+                disabled={isSubmitting || isRequestingCode}
+                label="登录"
+                onClick={() => switchMode('login')}
+              />
+              <ModeButton
+                active={!isLogin}
+                disabled={isSubmitting || isRequestingCode}
+                label="注册"
+                onClick={() => switchMode('register')}
+              />
             </div>
 
             <form noValidate aria-busy={isSubmitting || isRequestingCode} onSubmit={handleSubmit}>
-              <fieldset className="m-0 space-y-4 border-0 p-0" disabled={isSubmitting || isRequestingCode}>
+              <fieldset
+                className="m-0 space-y-4 border-0 p-0"
+                disabled={isSubmitting || isRequestingCode}
+              >
                 <FormField
                   autoComplete="email"
                   icon={<Mail size={16} />}
@@ -232,7 +258,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                   <VerificationCodeField
                     id={verificationCodeId}
                     isRequesting={isRequestingCode}
-                    onChange={(value) => updateField('verificationCode', value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(value) =>
+                      updateField('verificationCode', value.replace(/\D/g, '').slice(0, 6))
+                    }
                     onRequest={() => void handleRequestVerificationCode()}
                     resendSeconds={resendSeconds}
                     testCode={testCode}
@@ -266,7 +294,9 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
               </fieldset>
 
               <div className="mt-3 min-h-5" role="status" aria-live="polite">
-                {error ? <p className="m-0 text-xs text-[var(--ui-status-danger)]">{error}</p> : null}
+                {error ? (
+                  <p className="m-0 text-xs text-[var(--ui-status-danger)]">{error}</p>
+                ) : null}
               </div>
 
               <button
@@ -274,7 +304,15 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
                 type="submit"
                 disabled={isSubmitting || isRequestingCode}
               >
-                <span>{isSubmitting ? (isLogin ? '正在登录…' : '正在注册…') : (isLogin ? '登录并进入工作台' : '创建账号')}</span>
+                <span>
+                  {isSubmitting
+                    ? isLogin
+                      ? '正在登录…'
+                      : '正在注册…'
+                    : isLogin
+                      ? '登录并进入工作台'
+                      : '创建账号'}
+                </span>
                 <ArrowRight size={16} strokeWidth={1.9} />
               </button>
             </form>
@@ -304,7 +342,10 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
 
 function ProductStory() {
   return (
-    <section className="auth-story-reveal hidden min-w-0 lg:block" aria-label="Block Notes 产品介绍">
+    <section
+      className="auth-story-reveal hidden min-w-0 lg:block"
+      aria-label="Block Notes 产品介绍"
+    >
       <div className="max-w-[600px]">
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--ui-border)] bg-[rgba(255,254,250,0.72)] px-3 py-1.5 text-xs font-medium text-[var(--ui-text-secondary)] shadow-[var(--ui-shadow-xs)] backdrop-blur">
           <Check size={13} className="text-[var(--ui-status-success)]" />
@@ -328,7 +369,9 @@ function ProductStory() {
               <span className="h-2 w-2 rounded-full bg-[#d8dde6]" />
               <span className="h-2 w-2 rounded-full bg-[#d8dde6]" />
             </div>
-            <span className="text-[10px] font-medium text-[var(--ui-text-muted)]">Block Notes 工作台</span>
+            <span className="text-[10px] font-medium text-[var(--ui-text-muted)]">
+              Block Notes 工作台
+            </span>
           </div>
 
           <div className="grid h-[270px] grid-cols-[112px_1fr_168px]">
@@ -520,10 +563,22 @@ interface FormFieldProps {
   value: string;
 }
 
-function FormField({ autoComplete, icon, id, label, maxLength, onChange, placeholder, type, value }: FormFieldProps) {
+function FormField({
+  autoComplete,
+  icon,
+  id,
+  label,
+  maxLength,
+  onChange,
+  placeholder,
+  type,
+  value,
+}: FormFieldProps) {
   return (
     <label className="block" htmlFor={id}>
-      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">{label}</span>
+      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">
+        {label}
+      </span>
       <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
         {icon}
         <input
@@ -564,7 +619,9 @@ function VerificationCodeField({
 
   return (
     <label className="block" htmlFor={id}>
-      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">邮箱验证码</span>
+      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">
+        邮箱验证码
+      </span>
       <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] pl-3 pr-1.5 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
         <ShieldCheck size={16} />
         <input
@@ -620,7 +677,9 @@ function PasswordField({
 }: PasswordFieldProps) {
   return (
     <label className="block" htmlFor={id}>
-      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">{label}</span>
+      <span className="mb-2 block text-xs font-medium text-[var(--ui-text-secondary)]">
+        {label}
+      </span>
       <span className="flex h-11 items-center gap-2.5 rounded-[10px] border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] px-3 text-[var(--ui-text-muted)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ui-primary)] focus-within:shadow-[0_0_0_3px_var(--ui-primary-soft)]">
         <LockKeyhole size={16} />
         <input

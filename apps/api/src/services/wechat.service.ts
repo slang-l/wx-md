@@ -1,9 +1,4 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  createHmac,
-  randomBytes,
-} from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from 'node:crypto';
 
 import { AppError, UpstreamServiceError } from '../errors.js';
 import type { WechatRepository } from '../repositories/wechat.repository.js';
@@ -97,7 +92,10 @@ export interface WechatService {
   getConfig(userId: string): Promise<WechatPublicConfig>;
   saveConfig(userId: string, input: SaveWechatConfigInput): Promise<WechatPublicConfig>;
   deleteConfig(userId: string): Promise<void>;
-  publishArticle(userId: string, input: PublishWechatArticleInput): Promise<SubmitWechatPublishResult>;
+  publishArticle(
+    userId: string,
+    input: PublishWechatArticleInput,
+  ): Promise<SubmitWechatPublishResult>;
   getPublishStatus(userId: string, publishId: string): Promise<WechatPublishStatusResult>;
 }
 
@@ -130,19 +128,23 @@ export function createWechatService({
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (error) {
-      if (error instanceof WechatResponseError || error instanceof UpstreamServiceError) throw error;
+      if (error instanceof WechatResponseError || error instanceof UpstreamServiceError)
+        throw error;
       throw new UpstreamServiceError('WECHAT_UNAVAILABLE', '无法连接微信接口，请稍后重试');
     }
 
     let payload: WechatJson;
     try {
-      payload = await response.json() as WechatJson;
+      payload = (await response.json()) as WechatJson;
     } catch {
       throw new UpstreamServiceError('WECHAT_INVALID_RESPONSE', '微信接口返回了无法识别的响应');
     }
 
     if (!response.ok) {
-      throw new UpstreamServiceError('WECHAT_UNAVAILABLE', `微信接口请求失败（HTTP ${response.status}）`);
+      throw new UpstreamServiceError(
+        'WECHAT_UNAVAILABLE',
+        `微信接口请求失败（HTTP ${response.status}）`,
+      );
     }
 
     const errorCode = typeof payload.errcode === 'number' ? payload.errcode : 0;
@@ -201,9 +203,9 @@ export function createWechatService({
   ): Promise<string> {
     const cached = accessTokens.get(userId);
     if (
-      !forceRefresh
-      && cached?.appId === account.appId
-      && cached.expiresAt - ACCESS_TOKEN_REFRESH_MARGIN_MS > now()
+      !forceRefresh &&
+      cached?.appId === account.appId &&
+      cached.expiresAt - ACCESS_TOKEN_REFRESH_MARGIN_MS > now()
     ) {
       return cached.value;
     }
@@ -226,9 +228,9 @@ export function createWechatService({
         return await request(accessToken);
       } catch (error) {
         if (
-          attempt === 0
-          && error instanceof WechatResponseError
-          && [40014, 42001].includes(error.errorCode)
+          attempt === 0 &&
+          error instanceof WechatResponseError &&
+          [40014, 42001].includes(error.errorCode)
         ) {
           accessTokens.delete(userId);
           forceRefresh = true;
@@ -266,14 +268,17 @@ export function createWechatService({
     const bytes = decodeImage(image);
 
     return withAccessToken(userId, account, (accessToken) => {
-      const pathname = kind === 'cover'
-        ? '/cgi-bin/material/add_material'
-        : '/cgi-bin/media/uploadimg';
+      const pathname =
+        kind === 'cover' ? '/cgi-bin/material/add_material' : '/cgi-bin/media/uploadimg';
       const url = wechatApiUrl(pathname, accessToken);
       if (kind === 'cover') url.searchParams.set('type', 'image');
 
       const body = new FormData();
-      body.append('media', new Blob([new Uint8Array(bytes)], { type: image.mimeType }), safeFilename(image));
+      body.append(
+        'media',
+        new Blob([new Uint8Array(bytes)], { type: image.mimeType }),
+        safeFilename(image),
+      );
       return requestWechat(url, { method: 'POST', body });
     });
   }
@@ -371,11 +376,8 @@ export function createWechatService({
       const failedArticleIndexes = Array.isArray(result.fail_idx)
         ? result.fail_idx.filter((value): value is number => Number.isInteger(value))
         : [];
-      const state: WechatPublishState = statusCode === 0
-        ? 'published'
-        : statusCode === 1
-          ? 'publishing'
-          : 'failed';
+      const state: WechatPublishState =
+        statusCode === 0 ? 'published' : statusCode === 1 ? 'publishing' : 'failed';
 
       return {
         publishId,
@@ -397,7 +399,7 @@ function encryptCredential(value: string, key: Buffer, associatedData: Buffer): 
   const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [CREDENTIAL_VERSION, iv, tag, encrypted]
-    .map((part) => typeof part === 'string' ? part : part.toString('base64url'))
+    .map((part) => (typeof part === 'string' ? part : part.toString('base64url')))
     .join(':');
 }
 
@@ -439,7 +441,11 @@ function decodeImage(image: EncodedWechatImage): Buffer {
   }
 
   const bytes = Buffer.from(image.data, 'base64');
-  if (bytes.length === 0 || bytes.length > MAX_IMAGE_BYTES || !matchesImageSignature(bytes, image.mimeType)) {
+  if (
+    bytes.length === 0 ||
+    bytes.length > MAX_IMAGE_BYTES ||
+    !matchesImageSignature(bytes, image.mimeType)
+  ) {
     throw new AppError(400, 'INVALID_IMAGE_DATA', '图片为空、超过 5 MB 或格式与文件内容不一致');
   }
   return bytes;
@@ -450,14 +456,20 @@ function matchesImageSignature(bytes: Buffer, mimeType: ImageMimeType): boolean 
     return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   }
   if (mimeType === 'image/png') {
-    return bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    return bytes
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   }
   return bytes.subarray(0, 4).toString('ascii') === 'GIF8';
 }
 
 function safeFilename(image: EncodedWechatImage): string {
-  const extension = image.mimeType === 'image/png' ? 'png' : image.mimeType === 'image/gif' ? 'gif' : 'jpg';
-  const basename = image.filename.replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 80).replace(/\.[^.]+$/, '');
+  const extension =
+    image.mimeType === 'image/png' ? 'png' : image.mimeType === 'image/gif' ? 'gif' : 'jpg';
+  const basename = image.filename
+    .replace(/[^A-Za-z0-9._-]/g, '-')
+    .slice(0, 80)
+    .replace(/\.[^.]+$/, '');
   return `${basename || 'wechat-image'}.${extension}`;
 }
 
@@ -489,9 +501,10 @@ function wechatErrorMessage(errorCode: number, rawMessage: unknown): string {
     45028: '草稿数量已达到上限，请先在公众号后台清理草稿',
     48001: '当前公众号没有该接口权限，请确认账号类型和认证状态',
   };
-  const fallback = typeof rawMessage === 'string' && rawMessage.trim()
-    ? `微信接口错误：${rawMessage.trim()}`
-    : `微信接口返回错误码 ${errorCode}`;
+  const fallback =
+    typeof rawMessage === 'string' && rawMessage.trim()
+      ? `微信接口错误：${rawMessage.trim()}`
+      : `微信接口返回错误码 ${errorCode}`;
   return messages[errorCode] ?? fallback;
 }
 

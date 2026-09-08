@@ -69,7 +69,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
   let payload: ErrorResponse | null = null;
   try {
-    payload = await response.json() as ErrorResponse;
+    payload = (await response.json()) as ErrorResponse;
   } catch {
     // 非 JSON 错误仍转换为统一错误，避免调用方依赖 fetch 的解析异常。
   }
@@ -188,9 +188,9 @@ export async function bootstrap(): Promise<AuthUser | null> {
     // 只有后端明确判定 Refresh Token 无效时才进入游客态。网络故障、网关
     // 拒绝或服务端异常必须交给启动页展示，否则会把“服务不可用”伪装成退出登录。
     if (
-      error instanceof AuthApiError
-      && error.status === 401
-      && error.code === 'INVALID_REFRESH_TOKEN'
+      error instanceof AuthApiError &&
+      error.status === 401 &&
+      error.code === 'INVALID_REFRESH_TOKEN'
     ) {
       return null;
     }

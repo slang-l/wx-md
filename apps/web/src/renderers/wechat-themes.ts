@@ -502,7 +502,11 @@ const simpleTheme = createWechatTheme({
   },
 });
 
-export const wechatThemes = [defaultTheme, graceTheme, simpleTheme] as const satisfies readonly WechatTheme[];
+export const wechatThemes = [
+  defaultTheme,
+  graceTheme,
+  simpleTheme,
+] as const satisfies readonly WechatTheme[];
 
 export const defaultWechatThemeId: WechatThemeId = 'default';
 

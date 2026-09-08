@@ -120,7 +120,9 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
       if (!window.matchMedia(THREE_PANE_QUERY).matches) return;
 
       const availableWidth = shellRef.current?.clientWidth ?? window.innerWidth;
-      setPanelWidths((current) => fitPanelWidths(current, availableWidth, sidebarOpen, previewOpen));
+      setPanelWidths((current) =>
+        fitPanelWidths(current, availableWidth, sidebarOpen, previewOpen),
+      );
     };
 
     fitPanelsToViewport();
@@ -203,7 +205,13 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
       if (!resizeState || resizeState.pointerId !== event.pointerId) return;
 
       event.preventDefault();
-      setPanelWidths(resizeByDelta(resizeState.edge, resizeState.startWidths, event.clientX - resizeState.startX));
+      setPanelWidths(
+        resizeByDelta(
+          resizeState.edge,
+          resizeState.startWidths,
+          event.clientX - resizeState.startX,
+        ),
+      );
     },
     [resizeByDelta],
   );
@@ -386,7 +394,9 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
 
         <div
           className={`workspace-sidebar-layer ${sidebarOpen ? 'is-open' : ''}`}
-          style={sidebarOpen ? { width: panelWidths.sidebar, minWidth: panelWidths.sidebar } : undefined}
+          style={
+            sidebarOpen ? { width: panelWidths.sidebar, minWidth: panelWidths.sidebar } : undefined
+          }
         >
           <DocumentSidebar
             currentDocId={currentDoc.id}
@@ -424,7 +434,12 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
                 onBrandAssetLibraryOpenChange={setBrandAssetLibraryOpen}
                 onComponentLibraryOpenChange={setComponentLibraryOpen}
               />
-              <button className="workspace-help-button" type="button" aria-label="帮助" title="帮助">
+              <button
+                className="workspace-help-button"
+                type="button"
+                aria-label="帮助"
+                title="帮助"
+              >
                 ?
               </button>
             </div>
@@ -450,7 +465,11 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
                   aria-label="文章分享预览"
                   style={{ width: panelWidths.preview, flexBasis: panelWidths.preview }}
                 >
-                  <WeChatPreview doc={currentDoc} userId={user.id} onClose={() => setPreviewOpen(false)} />
+                  <WeChatPreview
+                    doc={currentDoc}
+                    userId={user.id}
+                    onClose={() => setPreviewOpen(false)}
+                  />
                 </section>
               </>
             ) : null}
@@ -531,7 +550,8 @@ function fitPanelWidths(
 ): PanelWidths {
   let sidebar = clamp(widths.sidebar, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
   let preview = clamp(widths.preview, MIN_PREVIEW_WIDTH, MAX_PREVIEW_WIDTH);
-  const handleWidth = Number(sidebarOpen) * RESIZE_HANDLE_WIDTH + Number(previewOpen) * RESIZE_HANDLE_WIDTH;
+  const handleWidth =
+    Number(sidebarOpen) * RESIZE_HANDLE_WIDTH + Number(previewOpen) * RESIZE_HANDLE_WIDTH;
   const sidePanelBudget = Math.max(0, availableWidth - MIN_EDITOR_WIDTH - handleWidth);
 
   if (sidebarOpen && previewOpen && sidebar + preview > sidePanelBudget) {

@@ -286,15 +286,15 @@ export const contentComponents: ContentComponentDefinition[] = [
   },
 ];
 
-export function createContentComponentBlocks(component: ContentComponentDefinition): NormalizedBlock[] {
+export function createContentComponentBlocks(
+  component: ContentComponentDefinition,
+): NormalizedBlock[] {
   return component.blocks.map((block) => ({
     ...block,
     id: crypto.randomUUID(),
     ...(block.delta ? { delta: cloneInlineDelta(block.delta) } : {}),
     ...(block.items ? { items: [...block.items] } : {}),
-    ...(block.itemDeltas
-      ? { itemDeltas: block.itemDeltas.map(cloneInlineDelta) }
-      : {}),
+    ...(block.itemDeltas ? { itemDeltas: block.itemDeltas.map(cloneInlineDelta) } : {}),
     ...(block.checked ? { checked: [...block.checked] } : {}),
   }));
 }

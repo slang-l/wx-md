@@ -50,7 +50,11 @@ export function createBrandAssetService(repository: BrandAssetRepository): Brand
     async create(userId, input) {
       const existing = await repository.listByUserId(userId);
       if (existing.length >= MAX_ASSET_COUNT) {
-        throw new AppError(409, 'BRAND_ASSET_LIMIT_REACHED', `Brand asset limit is ${MAX_ASSET_COUNT}`);
+        throw new AppError(
+          409,
+          'BRAND_ASSET_LIMIT_REACHED',
+          `Brand asset limit is ${MAX_ASSET_COUNT}`,
+        );
       }
 
       const imageData = decodeAndValidateImage(input.data, input.mimeType);
@@ -92,17 +96,25 @@ function decodeAndValidateImage(data: string, mimeType: BrandAsset['mimeType']):
 
   const isExpectedType = (() => {
     if (mimeType === 'image/png') {
-      return imageData.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+      return imageData
+        .subarray(0, 8)
+        .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
     }
     if (mimeType === 'image/jpeg') {
       return imageData[0] === 0xff && imageData[1] === 0xd8 && imageData[2] === 0xff;
     }
-    return imageData.subarray(0, 6).toString('ascii') === 'GIF87a'
-      || imageData.subarray(0, 6).toString('ascii') === 'GIF89a';
+    return (
+      imageData.subarray(0, 6).toString('ascii') === 'GIF87a' ||
+      imageData.subarray(0, 6).toString('ascii') === 'GIF89a'
+    );
   })();
 
   if (!isExpectedType) {
-    throw new AppError(400, 'INVALID_BRAND_ASSET_IMAGE', 'Image data does not match its media type');
+    throw new AppError(
+      400,
+      'INVALID_BRAND_ASSET_IMAGE',
+      'Image data does not match its media type',
+    );
   }
 
   return imageData;
@@ -121,4 +133,3 @@ function toView(asset: BrandAsset): BrandAssetView {
     updatedAt: asset.updatedAt.toISOString(),
   };
 }
-

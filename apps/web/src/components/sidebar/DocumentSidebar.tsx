@@ -82,7 +82,9 @@ export function DocumentSidebar({
   };
 
   const openInbox = () => {
-    const newestDoc = [...docs].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+    const newestDoc = [...docs].sort((left, right) =>
+      right.updatedAt.localeCompare(left.updatedAt),
+    )[0];
     if (!newestDoc) return;
 
     setCurrentDocId(newestDoc.id);
@@ -111,7 +113,9 @@ export function DocumentSidebar({
                 if (event.key === 'Escape') closeSearch();
               }}
             />
-            <button type="button" aria-label="Close search" onClick={closeSearch}>×</button>
+            <button type="button" aria-label="Close search" onClick={closeSearch}>
+              ×
+            </button>
           </label>
         ) : (
           <ShortcutButton label="搜索" icon={Search} onClick={openSearch} />
@@ -122,7 +126,14 @@ export function DocumentSidebar({
       <section className="notion-sidebar-pages" aria-label="Page navigation">
         <header className="notion-sidebar-pages-header">
           <span>页面</span>
-          <button type="button" aria-label="Add page" title="Add page" onClick={handleCreateTopLevelPage}>+</button>
+          <button
+            type="button"
+            aria-label="Add page"
+            title="Add page"
+            onClick={handleCreateTopLevelPage}
+          >
+            +
+          </button>
         </header>
 
         <div className="notion-sidebar-tree-scroll">
@@ -137,8 +148,13 @@ export function DocumentSidebar({
       </section>
 
       <footer className="notion-sidebar-footer">
-        <button type="button" onClick={openInbox}>最近编辑</button>
-        <button type="button" onClick={onOpenSettings}><Settings size={14} aria-hidden="true" />设置</button>
+        <button type="button" onClick={openInbox}>
+          最近编辑
+        </button>
+        <button type="button" onClick={onOpenSettings}>
+          <Settings size={14} aria-hidden="true" />
+          设置
+        </button>
       </footer>
     </aside>
   );

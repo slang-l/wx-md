@@ -18,9 +18,8 @@ const pool = createPostgresPool(databaseUrl);
 
 try {
   const appliedMigrations = await runMigrations(pool);
-  const summary = appliedMigrations.length > 0
-    ? appliedMigrations.join(', ')
-    : 'database is already up to date';
+  const summary =
+    appliedMigrations.length > 0 ? appliedMigrations.join(', ') : 'database is already up to date';
   console.info(`Database migrations complete: ${summary}`);
 } finally {
   await pool.end();

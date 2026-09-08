@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AuthPage } from './components/auth/AuthPage';
 import { AppLayout } from './components/layout/AppLayout';
-import {
-  AuthApiError,
-  bootstrap,
-  logout,
-  type AuthUser,
-} from './services/auth-api';
+import { AuthApiError, bootstrap, logout, type AuthUser } from './services/auth-api';
 import { clearDocsFromMemory, loadDocsForUser } from './store/docsStore';
 
 interface AuthRecoveryFailure {
@@ -95,13 +90,7 @@ export default function App() {
     );
   }
 
-  return (
-    <AppLayout
-      isSigningOut={isSigningOut}
-      onSignOut={handleSignOut}
-      user={auth.user}
-    />
-  );
+  return <AppLayout isSigningOut={isSigningOut} onSignOut={handleSignOut} user={auth.user} />;
 }
 
 function AuthRecoveryErrorScreen({

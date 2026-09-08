@@ -1,8 +1,4 @@
-import {
-  getWechatTheme,
-  type WechatTheme,
-  type WechatThemeId,
-} from './wechat-themes';
+import { getWechatTheme, type WechatTheme, type WechatThemeId } from './wechat-themes';
 
 export type VisualThemeFont = 'sans' | 'serif' | 'modern';
 export type VisualThemeStructure = 'default' | 'grace' | 'simple';
@@ -71,21 +67,24 @@ export function createVisualWechatTheme(
   const textChanged = settings.textColor !== defaults.textColor;
   const accentChanged = settings.accentColor !== defaults.accentColor;
 
-  let title = settings.headingStyle === defaults.headingStyle
-    ? base.styles.title
-    : headingSource.styles.title;
-  let heading1 = settings.headingStyle === defaults.headingStyle
-    ? base.styles.heading1
-    : headingSource.styles.heading1;
-  let heading2 = settings.headingStyle === defaults.headingStyle
-    ? base.styles.heading2
-    : headingSource.styles.heading2;
-  let heading3 = settings.headingStyle === defaults.headingStyle
-    ? base.styles.heading3
-    : headingSource.styles.heading3;
-  let quote = settings.quoteStyle === defaults.quoteStyle
-    ? base.styles.quote
-    : quoteSource.styles.quote;
+  let title =
+    settings.headingStyle === defaults.headingStyle
+      ? base.styles.title
+      : headingSource.styles.title;
+  let heading1 =
+    settings.headingStyle === defaults.headingStyle
+      ? base.styles.heading1
+      : headingSource.styles.heading1;
+  let heading2 =
+    settings.headingStyle === defaults.headingStyle
+      ? base.styles.heading2
+      : headingSource.styles.heading2;
+  let heading3 =
+    settings.headingStyle === defaults.headingStyle
+      ? base.styles.heading3
+      : headingSource.styles.heading3;
+  let quote =
+    settings.quoteStyle === defaults.quoteStyle ? base.styles.quote : quoteSource.styles.quote;
   const image = appendStyles(
     base.styles.image,
     settings.imageRadius !== defaults.imageRadius ? `border-radius:${settings.imageRadius}px` : '',
@@ -112,7 +111,9 @@ export function createVisualWechatTheme(
     quote = appendStyles(
       quote,
       `border-left-color:${settings.accentColor}`,
-      settings.quoteStyle === 'simple' ? `background:${accentTint};border-color:${accentBorder}` : '',
+      settings.quoteStyle === 'simple'
+        ? `background:${accentTint};border-color:${accentBorder}`
+        : '',
     );
   }
 
@@ -187,7 +188,10 @@ export function createVisualWechatTheme(
       link: appendStyles(base.styles.link, `color:${settings.accentColor}`),
       figure: appendStyles(base.styles.figure, `color:${settings.textColor}`),
       image,
-      caption: appendStyles(base.styles.caption, `color:${colorWithAlpha(settings.textColor, 0.58)}`),
+      caption: appendStyles(
+        base.styles.caption,
+        `color:${colorWithAlpha(settings.textColor, 0.58)}`,
+      ),
     },
   };
 }
@@ -199,20 +203,20 @@ export function parseVisualThemeSettings(value: unknown): VisualThemeSettings | 
   const structures: VisualThemeStructure[] = ['default', 'grace', 'simple'];
   const alignments: VisualThemeAlignment[] = ['left', 'justify'];
   if (
-    !isHexColor(value.accentColor)
-    || !isHexColor(value.textColor)
-    || !isHexColor(value.backgroundColor)
-    || !fonts.includes(value.font as VisualThemeFont)
-    || !structures.includes(value.headingStyle as VisualThemeStructure)
-    || !structures.includes(value.quoteStyle as VisualThemeStructure)
-    || !alignments.includes(value.textAlign as VisualThemeAlignment)
-    || typeof value.firstLineIndent !== 'boolean'
-    || !isNumberInRange(value.fontSize, 13, 22)
-    || !isNumberInRange(value.lineHeight, 1.35, 2.4)
-    || !isNumberInRange(value.paragraphSpacing, 0.5, 3)
-    || !isNumberInRange(value.letterSpacing, 0, 0.2)
-    || !isNumberInRange(value.pagePadding, 0, 24)
-    || !isNumberInRange(value.imageRadius, 0, 20)
+    !isHexColor(value.accentColor) ||
+    !isHexColor(value.textColor) ||
+    !isHexColor(value.backgroundColor) ||
+    !fonts.includes(value.font as VisualThemeFont) ||
+    !structures.includes(value.headingStyle as VisualThemeStructure) ||
+    !structures.includes(value.quoteStyle as VisualThemeStructure) ||
+    !alignments.includes(value.textAlign as VisualThemeAlignment) ||
+    typeof value.firstLineIndent !== 'boolean' ||
+    !isNumberInRange(value.fontSize, 13, 22) ||
+    !isNumberInRange(value.lineHeight, 1.35, 2.4) ||
+    !isNumberInRange(value.paragraphSpacing, 0.5, 3) ||
+    !isNumberInRange(value.letterSpacing, 0, 0.2) ||
+    !isNumberInRange(value.pagePadding, 0, 24) ||
+    !isNumberInRange(value.imageRadius, 0, 20)
   ) {
     return null;
   }
@@ -256,10 +260,11 @@ function isHexColor(value: unknown): value is string {
 }
 
 function isNumberInRange(value: unknown, minimum: number, maximum: number): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= minimum && value <= maximum;
+  return (
+    typeof value === 'number' && Number.isFinite(value) && value >= minimum && value <= maximum
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-

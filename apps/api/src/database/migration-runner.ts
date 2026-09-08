@@ -5,9 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { Pool, PoolClient, QueryResultRow } from 'pg';
 
-const DEFAULT_MIGRATIONS_DIRECTORY = fileURLToPath(
-  new URL('../../migrations/', import.meta.url),
-);
+const DEFAULT_MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../migrations/', import.meta.url));
 const MIGRATION_FILE_PATTERN = /^\d+_[a-z0-9][a-z0-9_-]*\.sql$/;
 const MIGRATION_LOCK_NAME = 'wx-md:schema-migrations';
 
@@ -40,24 +38,20 @@ export async function runMigrations(
   pool: Pool,
   options: RunMigrationsOptions = {},
 ): Promise<string[]> {
-  const migrationsDirectory =
-    options.migrationsDirectory ?? DEFAULT_MIGRATIONS_DIRECTORY;
-  const migrationNames = (await readdir(migrationsDirectory, {
-    withFileTypes: true,
-  }))
-    .filter(
-      (entry) => entry.isFile() && MIGRATION_FILE_PATTERN.test(entry.name),
-    )
+  const migrationsDirectory = options.migrationsDirectory ?? DEFAULT_MIGRATIONS_DIRECTORY;
+  const migrationNames = (
+    await readdir(migrationsDirectory, {
+      withFileTypes: true,
+    })
+  )
+    .filter((entry) => entry.isFile() && MIGRATION_FILE_PATTERN.test(entry.name))
     .map((entry) => entry.name)
     .sort();
   const client = await pool.connect();
   let lockAcquired = false;
 
   try {
-    await client.query(
-      'SELECT pg_advisory_lock(hashtext($1)::bigint)',
-      [MIGRATION_LOCK_NAME],
-    );
+    await client.query('SELECT pg_advisory_lock(hashtext($1)::bigint)', [MIGRATION_LOCK_NAME]);
     lockAcquired = true;
 
     await client.query(`
@@ -72,10 +66,7 @@ export async function runMigrations(
       'SELECT name, checksum FROM schema_migrations',
     );
     const appliedByName = new Map(
-      appliedResult.rows.map((migration) => [
-        migration.name,
-        migration.checksum,
-      ]),
+      appliedResult.rows.map((migration) => [migration.name, migration.checksum]),
     );
     const newlyApplied: string[] = [];
 
@@ -90,9 +81,7 @@ export async function runMigrations(
 
       if (appliedChecksum) {
         if (appliedChecksum !== checksum) {
-          throw new Error(
-            `Applied migration ${migrationName} has been modified`,
-          );
+          throw new Error(`Applied migration ${migrationName} has been modified`);
         }
         continue;
       }
@@ -101,10 +90,10 @@ export async function runMigrations(
       try {
         // Migration SQL is trusted, version-controlled application code.
         await client.query(sql);
-        await client.query(
-          'INSERT INTO schema_migrations (name, checksum) VALUES ($1, $2)',
-          [migrationName, checksum],
-        );
+        await client.query('INSERT INTO schema_migrations (name, checksum) VALUES ($1, $2)', [
+          migrationName,
+          checksum,
+        ]);
         await client.query('COMMIT');
         newlyApplied.push(migrationName);
       } catch (error) {
@@ -117,10 +106,9 @@ export async function runMigrations(
   } finally {
     if (lockAcquired) {
       try {
-        await client.query(
-          'SELECT pg_advisory_unlock(hashtext($1)::bigint)',
-          [MIGRATION_LOCK_NAME],
-        );
+        await client.query('SELECT pg_advisory_unlock(hashtext($1)::bigint)', [
+          MIGRATION_LOCK_NAME,
+        ]);
       } finally {
         client.release();
       }

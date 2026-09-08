@@ -8,12 +8,8 @@ const DEFAULT_POOL_CONFIG: Readonly<PoolConfig> = {
 };
 
 /** Create the process-wide PostgreSQL connection pool used by the API. */
-export function createPostgresPool(
-  connection: string | PoolConfig,
-): Pool {
-  const config = typeof connection === 'string'
-    ? { connectionString: connection }
-    : connection;
+export function createPostgresPool(connection: string | PoolConfig): Pool {
+  const config = typeof connection === 'string' ? { connectionString: connection } : connection;
 
   return new Pool({
     ...DEFAULT_POOL_CONFIG,

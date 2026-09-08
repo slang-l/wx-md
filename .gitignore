@@ -64,7 +64,9 @@ temp/
 
 # Editor settings
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .history/
 *.swp
 *.swo

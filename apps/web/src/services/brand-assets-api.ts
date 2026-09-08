@@ -61,4 +61,3 @@ export function updateBrandAsset(
 export function deleteBrandAsset(assetId: string): Promise<void> {
   return authenticatedRequest<void>(`/api/brand-assets/${assetId}`, { method: 'DELETE' });
 }
-

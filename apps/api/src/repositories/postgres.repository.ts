@@ -3,10 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { Pool, PoolClient, QueryResultRow } from 'pg';
 
 import type { RefreshSession, User, UserRole, UserStatus } from '../type/auth.js';
-import type {
-  AuthRepository,
-  CreateRefreshSessionInput,
-} from './auth.repository.js';
+import type { AuthRepository, CreateRefreshSessionInput } from './auth.repository.js';
 
 interface UserRow extends QueryResultRow {
   id: string;
@@ -111,14 +108,8 @@ async function rollback(client: PoolClient): Promise<void> {
  * 同一 Refresh Token family 的轮换、退出和重放撤销必须串行执行。
  * hashtextextended 的碰撞最多造成无关 family 短暂互相等待，不会破坏正确性。
  */
-async function lockRefreshFamily(
-  client: PoolClient,
-  familyId: string,
-): Promise<void> {
-  await client.query(
-    'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-    [familyId],
-  );
+async function lockRefreshFamily(client: PoolClient, familyId: string): Promise<void> {
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [familyId]);
 }
 
 async function insertRefreshSession(
@@ -252,10 +243,9 @@ export function createPostgresAuthRepository(pool: Pool): AuthRepository {
     },
 
     async findUserById(userId) {
-      const result = await pool.query<UserRow>(
-        `SELECT ${USER_COLUMNS} FROM users WHERE id = $1`,
-        [userId],
-      );
+      const result = await pool.query<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE id = $1`, [
+        userId,
+      ]);
       const row = result.rows[0];
       return row ? mapUser(row) : null;
     },

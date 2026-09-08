@@ -1,23 +1,16 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from 'node:crypto';
 
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcryptjs';
 
-import type { AppConfig } from "../config.js";
-import { AppError } from "../errors.js";
-import {
-  toPublicUser,
-  type AuthRepository,
-} from "../repositories/auth.repository.js";
-import type { PublicUser, User } from "../type/auth.js";
-import {
-  generateRefreshToken,
-  hashRefreshToken,
-  type TokenService,
-} from "./token.service.js";
+import type { AppConfig } from '../config.js';
+import { AppError } from '../errors.js';
+import { toPublicUser, type AuthRepository } from '../repositories/auth.repository.js';
+import type { PublicUser, User } from '../type/auth.js';
+import { generateRefreshToken, hashRefreshToken, type TokenService } from './token.service.js';
 import type {
   RegistrationVerificationChallenge,
   RegistrationVerificationService,
-} from "./registration-verification.service.js";
+} from './registration-verification.service.js';
 
 export interface Credentials {
   email: string;
@@ -42,13 +35,8 @@ export interface AuthResult {
 }
 
 export interface AuthService {
-  requestRegistrationVerificationCode(
-    email: string,
-  ): Promise<RegistrationVerificationChallenge>;
-  register(
-    input: RegisterInput,
-    metadata: SessionMetadata,
-  ): Promise<AuthResult>;
+  requestRegistrationVerificationCode(email: string): Promise<RegistrationVerificationChallenge>;
+  register(input: RegisterInput, metadata: SessionMetadata): Promise<AuthResult>;
   login(input: Credentials, metadata: SessionMetadata): Promise<AuthResult>;
   refresh(refreshToken: string, metadata: SessionMetadata): Promise<AuthResult>;
   logout(refreshToken: string | null): Promise<void>;
@@ -63,12 +51,9 @@ export interface CreateAuthServiceOptions {
 }
 
 // 用于不存在用户时执行一次真实 bcrypt compare，降低邮箱枚举的时序差异。
-const DUMMY_PASSWORD_HASH =
-  "$2b$12$f5zfgE4XrY1CQy6/nXjPQuHQUHlgGSLrhiEMmzEAW4qQXJvtLaAyq";
+const DUMMY_PASSWORD_HASH = '$2b$12$f5zfgE4XrY1CQy6/nXjPQuHQUHlgGSLrhiEMmzEAW4qQXJvtLaAyq';
 
-export function createAuthService(
-  options: CreateAuthServiceOptions,
-): AuthService {
+export function createAuthService(options: CreateAuthServiceOptions): AuthService {
   const {
     config,
     repository,
@@ -79,19 +64,13 @@ export function createAuthService(
   const dummyPasswordHash =
     passwordHashRounds === 12
       ? DUMMY_PASSWORD_HASH
-      : bcrypt.hashSync("wx-md-dummy-password", passwordHashRounds);
+      : bcrypt.hashSync('wx-md-dummy-password', passwordHashRounds);
 
   function refreshExpiry(): Date {
-    return new Date(
-      Date.now() + config.refreshTokenTtlDays * 24 * 60 * 60 * 1000,
-    );
+    return new Date(Date.now() + config.refreshTokenTtlDays * 24 * 60 * 60 * 1000);
   }
 
-  function authResult(
-    user: User,
-    refreshToken: string,
-    refreshExpiresAt: Date,
-  ): AuthResult {
+  function authResult(user: User, refreshToken: string, refreshExpiresAt: Date): AuthResult {
     return {
       accessToken: tokenService.signAccessToken(user),
       refreshToken,
@@ -121,21 +100,13 @@ export function createAuthService(
 
   function invalidRefreshToken(): never {
     // 不区分不存在、过期、撤销等状态，避免泄露会话细节。
-    throw new AppError(
-      401,
-      "INVALID_REFRESH_TOKEN",
-      "Invalid or expired refresh token",
-    );
+    throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Invalid or expired refresh token');
   }
 
   return {
     async requestRegistrationVerificationCode(email) {
       if (await repository.findUserByEmail(email)) {
-        throw new AppError(
-          409,
-          "EMAIL_ALREADY_EXISTS",
-          "Email is already registered",
-        );
+        throw new AppError(409, 'EMAIL_ALREADY_EXISTS', 'Email is already registered');
       }
 
       return registrationVerificationService.issue(email);
@@ -143,22 +114,12 @@ export function createAuthService(
 
     async register(input, metadata) {
       if (await repository.findUserByEmail(input.email)) {
-        throw new AppError(
-          409,
-          "EMAIL_ALREADY_EXISTS",
-          "Email is already registered",
-        );
+        throw new AppError(409, 'EMAIL_ALREADY_EXISTS', 'Email is already registered');
       }
 
-      registrationVerificationService.verify(
-        input.email,
-        input.verificationCode,
-      );
+      registrationVerificationService.verify(input.email, input.verificationCode);
 
-      const passwordHash = await bcrypt.hash(
-        input.password,
-        passwordHashRounds,
-      );
+      const passwordHash = await bcrypt.hash(input.password, passwordHashRounds);
       const email = input.email.toLowerCase().trim();
       const refreshToken = generateRefreshToken();
       const refreshExpiresAt = refreshExpiry();
@@ -169,7 +130,7 @@ export function createAuthService(
             email,
             passwordHash,
             // 当前 UI 没有昵称字段，因此默认取邮箱 @ 之前的部分。
-            name: input.name?.trim() || email.split("@")[0] || "User",
+            name: input.name?.trim() || email.split('@')[0] || 'User',
           },
           {
             tokenHash: hashRefreshToken(refreshToken),
@@ -184,15 +145,8 @@ export function createAuthService(
         return authResult(user, refreshToken, refreshExpiresAt);
       } catch (error) {
         // 数据库版本仍可能在并发请求下触发唯一索引冲突。
-        if (
-          error instanceof Error &&
-          error.message === "EMAIL_ALREADY_EXISTS"
-        ) {
-          throw new AppError(
-            409,
-            "EMAIL_ALREADY_EXISTS",
-            "Email is already registered",
-          );
+        if (error instanceof Error && error.message === 'EMAIL_ALREADY_EXISTS') {
+          throw new AppError(409, 'EMAIL_ALREADY_EXISTS', 'Email is already registered');
         }
         throw error;
       }
@@ -206,15 +160,11 @@ export function createAuthService(
       );
 
       if (!user || !passwordMatches) {
-        throw new AppError(
-          401,
-          "INVALID_CREDENTIALS",
-          "Invalid email or password",
-        );
+        throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
       }
 
-      if (user.status !== "active") {
-        throw new AppError(403, "ACCOUNT_DISABLED", "Account is disabled");
+      if (user.status !== 'active') {
+        throw new AppError(403, 'ACCOUNT_DISABLED', 'Account is disabled');
       }
 
       return await issueSession(user, metadata);
@@ -222,8 +172,7 @@ export function createAuthService(
 
     async refresh(refreshToken, metadata) {
       const currentHash = hashRefreshToken(refreshToken);
-      const currentSession =
-        await repository.findRefreshSessionByTokenHash(currentHash);
+      const currentSession = await repository.findRefreshSessionByTokenHash(currentHash);
 
       if (!currentSession) {
         return invalidRefreshToken();
@@ -242,7 +191,7 @@ export function createAuthService(
 
       const user = await repository.findUserById(currentSession.userId);
 
-      if (!user || user.status !== "active") {
+      if (!user || user.status !== 'active') {
         await repository.revokeRefreshFamily(currentSession.familyId);
         return invalidRefreshToken();
       }
@@ -272,9 +221,7 @@ export function createAuthService(
 
       // Revoke the whole rotation family. The repository locks the supplied
       // token row so a concurrent refresh cannot leave a replacement alive.
-      await repository.revokeRefreshFamilyByTokenHash(
-        hashRefreshToken(refreshToken),
-      );
+      await repository.revokeRefreshFamilyByTokenHash(hashRefreshToken(refreshToken));
     },
   };
 }

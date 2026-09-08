@@ -1,8 +1,8 @@
 packages:
-  - "apps/*"
+  - 'apps/*'
   # Keep BlockSuite editable in-tree. These packages export their TypeScript
   # sources in workspace mode, so Vite consumes local source instead of npm
   # build artifacts.
-  - "packages/blocksuite/packages/framework/*"
-  - "packages/blocksuite/packages/blocks"
-  - "packages/blocksuite/packages/presets"
+  - 'packages/blocksuite/packages/framework/*'
+  - 'packages/blocksuite/packages/blocks'
+  - 'packages/blocksuite/packages/presets'

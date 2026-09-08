@@ -16,9 +16,12 @@
     "build": "pnpm --filter \"./apps/**\" --if-present build",
     "typecheck": "pnpm --filter \"./apps/**\" --if-present typecheck",
     "test": "pnpm --filter \"./apps/**\" --if-present test",
-    "check": "pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "prettier": "3.9.6",
     "vite": "6.4.3"
   }
 }

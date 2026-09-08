@@ -46,7 +46,9 @@
             "required": [
               {
                 "name": "home-hero-shell",
-                "any": ["[role='main']:has([data-testid='home-icon']) > div:first-child > div:first-child > div:first-child"]
+                "any": [
+                  "[role='main']:has([data-testid='home-icon']) > div:first-child > div:first-child > div:first-child"
+                ]
               }
             ],
             "recommended": [

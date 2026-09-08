@@ -10,12 +10,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import {
-  type KeyboardEvent as ReactKeyboardEvent,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   clearAppliedSettingsPreferences,
@@ -176,7 +171,8 @@ export function SettingsModal({
   useEffect(() => {
     if (!open) return undefined;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     const appRoot = document.getElementById('root');
     const appRootHadInert = appRoot?.hasAttribute('inert') ?? false;
@@ -241,7 +237,8 @@ export function SettingsModal({
 
     void navigator.storage.estimate().then(
       (estimate) => {
-        if (!cancelled) setStorage({ usage: estimate.usage, quota: estimate.quota, loading: false });
+        if (!cancelled)
+          setStorage({ usage: estimate.usage, quota: estimate.quota, loading: false });
       },
       () => {
         if (!cancelled) setStorage({ loading: false });
@@ -305,7 +302,10 @@ export function SettingsModal({
       >
         <aside className="shrink-0 border-b border-[var(--ui-border)] bg-[var(--ui-surface-subtle)] px-3 pb-2 pt-4 md:w-[220px] md:border-b-0 md:border-r md:px-3 md:py-5">
           <div className="mb-3 flex items-center justify-between px-2">
-            <h2 id="settings-title" className="text-base font-semibold tracking-tight text-[var(--ui-text)]">
+            <h2
+              id="settings-title"
+              className="text-base font-semibold tracking-tight text-[var(--ui-text)]"
+            >
               设置
             </h2>
             <button
@@ -317,7 +317,10 @@ export function SettingsModal({
               <X size={17} />
             </button>
           </div>
-          <nav className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-0.5 md:overflow-visible" aria-label="设置分类">
+          <nav
+            className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-0.5 md:overflow-visible"
+            aria-label="设置分类"
+          >
             {sections.map((item) => {
               const Icon = item.icon;
               const selected = section === item.id;
@@ -361,7 +364,12 @@ export function SettingsModal({
           <div className="mx-auto w-full max-w-[660px] px-5 pb-12 pt-7 sm:px-10 sm:pt-10">
             {section === 'account' ? (
               <section aria-labelledby="account-heading">
-                <h3 id="account-heading" className="text-xl font-semibold tracking-tight text-[var(--ui-text)]">账号</h3>
+                <h3
+                  id="account-heading"
+                  className="text-xl font-semibold tracking-tight text-[var(--ui-text)]"
+                >
+                  账号
+                </h3>
                 <p className="mt-1 text-sm text-[var(--ui-text-muted)]">查看当前登录账号的信息。</p>
 
                 <div className="mt-7 flex items-center gap-4 rounded-[var(--ui-radius-surface)] border border-[var(--ui-border)] p-4">
@@ -369,8 +377,12 @@ export function SettingsModal({
                     {(user.name || user.email).trim().slice(0, 1).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-[var(--ui-text)]">{user.name || '未设置名称'}</div>
-                    <div className="mt-0.5 truncate text-xs text-[var(--ui-text-muted)]">{user.email}</div>
+                    <div className="truncate text-sm font-semibold text-[var(--ui-text)]">
+                      {user.name || '未设置名称'}
+                    </div>
+                    <div className="mt-0.5 truncate text-xs text-[var(--ui-text-muted)]">
+                      {user.email}
+                    </div>
                   </div>
                 </div>
 
@@ -399,7 +411,11 @@ export function SettingsModal({
                       <LogOut size={16} />
                       {signOutPending ? '正在退出…' : '退出登录'}
                     </button>
-                    {message ? <p role="alert" className="mt-2 text-xs text-[var(--ui-status-danger)]">{message}</p> : null}
+                    {message ? (
+                      <p role="alert" className="mt-2 text-xs text-[var(--ui-status-danger)]">
+                        {message}
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
               </section>
@@ -407,8 +423,15 @@ export function SettingsModal({
 
             {section === 'appearance' ? (
               <section aria-labelledby="appearance-heading">
-                <h3 id="appearance-heading" className="text-xl font-semibold tracking-tight text-[var(--ui-text)]">外观</h3>
-                <p className="mt-1 text-sm text-[var(--ui-text-muted)]">调整这个浏览器上的界面体验。</p>
+                <h3
+                  id="appearance-heading"
+                  className="text-xl font-semibold tracking-tight text-[var(--ui-text)]"
+                >
+                  外观
+                </h3>
+                <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
+                  调整这个浏览器上的界面体验。
+                </p>
 
                 <div className="mt-7">
                   <div className="text-sm font-medium text-[var(--ui-text)]">强调色</div>
@@ -427,9 +450,14 @@ export function SettingsModal({
                               : 'border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:bg-[var(--ui-surface-subtle)]'
                           }`}
                         >
-                          <span className="h-4 w-4 rounded-full" style={{ backgroundColor: option.color }} />
+                          <span
+                            className="h-4 w-4 rounded-full"
+                            style={{ backgroundColor: option.color }}
+                          />
                           <span>{option.label}</span>
-                          {selected ? <Check className="ml-auto text-[var(--ui-primary)]" size={14} /> : null}
+                          {selected ? (
+                            <Check className="ml-auto text-[var(--ui-primary)]" size={14} />
+                          ) : null}
                         </button>
                       );
                     })}
@@ -453,8 +481,12 @@ export function SettingsModal({
                               : 'border-[var(--ui-border)] hover:bg-[var(--ui-surface-subtle)]'
                           }`}
                         >
-                          <span className="block text-sm font-medium text-[var(--ui-text)]">{option.label}</span>
-                          <span className="mt-1 block text-[11px] leading-4 text-[var(--ui-text-muted)]">{option.description}</span>
+                          <span className="block text-sm font-medium text-[var(--ui-text)]">
+                            {option.label}
+                          </span>
+                          <span className="mt-1 block text-[11px] leading-4 text-[var(--ui-text-muted)]">
+                            {option.description}
+                          </span>
                         </button>
                       );
                     })}
@@ -475,8 +507,15 @@ export function SettingsModal({
 
             {section === 'data' ? (
               <section aria-labelledby="data-heading">
-                <h3 id="data-heading" className="text-xl font-semibold tracking-tight text-[var(--ui-text)]">数据与隐私</h3>
-                <p className="mt-1 text-sm text-[var(--ui-text-muted)]">管理设置模块保存在本机浏览器中的数据。</p>
+                <h3
+                  id="data-heading"
+                  className="text-xl font-semibold tracking-tight text-[var(--ui-text)]"
+                >
+                  数据与隐私
+                </h3>
+                <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
+                  管理设置模块保存在本机浏览器中的数据。
+                </p>
 
                 <div className="mt-7 rounded-[var(--ui-radius-surface)] border border-[var(--ui-border)] p-4">
                   <div className="flex items-start gap-3">
@@ -490,12 +529,17 @@ export function SettingsModal({
                             ? '当前浏览器不支持存储空间估算。'
                             : `已使用 ${formatBytes(storage.usage)}，浏览器配额 ${formatBytes(storage.quota)}。`}
                       </p>
-                      <p className="mt-1 text-[11px] leading-4 text-[var(--ui-text-muted)]">该数值涵盖本站在此浏览器中的全部本地数据，不代表云端用量。</p>
+                      <p className="mt-1 text-[11px] leading-4 text-[var(--ui-text-muted)]">
+                        该数值涵盖本站在此浏览器中的全部本地数据，不代表云端用量。
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <SettingRow title="导出时包含账号信息" description="默认导出只包含设置；开启后会附带当前账号的 ID、名称和邮箱。">
+                <SettingRow
+                  title="导出时包含账号信息"
+                  description="默认导出只包含设置；开启后会附带当前账号的 ID、名称和邮箱。"
+                >
                   <Toggle
                     label="导出时包含账号信息"
                     checked={preferences.privacy.includeAccountInExport}
@@ -508,7 +552,10 @@ export function SettingsModal({
                   />
                 </SettingRow>
 
-                <SettingRow title="导出设置" description="下载一个可读的 JSON 文件，不会上传任何内容。">
+                <SettingRow
+                  title="导出设置"
+                  description="下载一个可读的 JSON 文件，不会上传任何内容。"
+                >
                   <button
                     type="button"
                     onClick={() => downloadSettingsJson(user, preferences)}
@@ -518,7 +565,10 @@ export function SettingsModal({
                   </button>
                 </SettingRow>
 
-                <SettingRow title="重置本地设置" description="恢复默认强调色、缩放、动效和导出隐私偏好，不会删除文档或账号。">
+                <SettingRow
+                  title="重置本地设置"
+                  description="恢复默认强调色、缩放、动效和导出隐私偏好，不会删除文档或账号。"
+                >
                   {confirmReset ? (
                     <div className="flex items-center gap-2">
                       <button
@@ -550,25 +600,42 @@ export function SettingsModal({
                     </button>
                   )}
                 </SettingRow>
-                {message ? <p role="status" className="mt-3 text-xs text-[var(--ui-status-success)]">{message}</p> : null}
+                {message ? (
+                  <p role="status" className="mt-3 text-xs text-[var(--ui-status-success)]">
+                    {message}
+                  </p>
+                ) : null}
               </section>
             ) : null}
 
             {section === 'about' ? (
               <section aria-labelledby="about-heading">
-                <h3 id="about-heading" className="text-xl font-semibold tracking-tight text-[var(--ui-text)]">关于</h3>
+                <h3
+                  id="about-heading"
+                  className="text-xl font-semibold tracking-tight text-[var(--ui-text)]"
+                >
+                  关于
+                </h3>
                 <div className="mt-8 flex items-center gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-xl bg-[var(--ui-primary)] text-xl font-bold text-white shadow-[var(--ui-shadow-card)]">M</div>
+                  <div className="grid h-14 w-14 place-items-center rounded-xl bg-[var(--ui-primary)] text-xl font-bold text-white shadow-[var(--ui-shadow-card)]">
+                    M
+                  </div>
                   <div>
                     <div className="text-base font-semibold text-[var(--ui-text)]">{appName}</div>
-                    {appVersion ? <div className="mt-1 text-xs text-[var(--ui-text-muted)]">版本 {appVersion}</div> : null}
+                    {appVersion ? (
+                      <div className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                        版本 {appVersion}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 <p className="mt-7 max-w-lg text-sm leading-7 text-[var(--ui-text-secondary)]">
-                  一个专注 Markdown 编辑与微信内容预览的工作空间。设置模块独立运行，只通过公开属性接收账号信息与退出动作。
+                  一个专注 Markdown
+                  编辑与微信内容预览的工作空间。设置模块独立运行，只通过公开属性接收账号信息与退出动作。
                 </p>
                 <div className="mt-7 rounded-[var(--ui-radius-surface)] bg-[var(--ui-surface-subtle)] p-4 text-xs leading-6 text-[var(--ui-text-muted)]">
-                  外观与隐私偏好按账号 ID 保存在当前浏览器，不会自动同步到其他设备。本页不提供修改邮箱、密码或云端数据管理等尚未接入的服务端能力。
+                  外观与隐私偏好按账号 ID
+                  保存在当前浏览器，不会自动同步到其他设备。本页不提供修改邮箱、密码或云端数据管理等尚未接入的服务端能力。
                 </div>
               </section>
             ) : null}

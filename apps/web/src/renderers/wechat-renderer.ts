@@ -40,9 +40,10 @@ export function renderWechatHtml(
   const bodyBlocks = skipDuplicatedTitle(doc);
   const blocksHtml = bodyBlocks.map((block) => renderWechatBlock(block, theme)).join('\n');
 
-  const previewFooter = options.includePreviewFooter === false
-    ? ''
-    : `<footer style="${theme.styles.footer}">
+  const previewFooter =
+    options.includePreviewFooter === false
+      ? ''
+      : `<footer style="${theme.styles.footer}">
     <span>阅读 1234</span>
     <span>分享</span>
     <span>赞 56</span>
@@ -229,7 +230,11 @@ function renderBlockInline(block: NormalizedBlock, theme: WechatTheme) {
   return renderInlineValue(block.delta, block.text ?? '', theme);
 }
 
-function renderInlineValue(delta: InlineTextDelta[] | undefined, fallback: string, theme: WechatTheme) {
+function renderInlineValue(
+  delta: InlineTextDelta[] | undefined,
+  fallback: string,
+  theme: WechatTheme,
+) {
   return delta?.length ? renderInlineDelta(delta, theme) : renderInlineMarkdown(fallback, theme);
 }
 
@@ -256,7 +261,10 @@ function renderInlineDelta(delta: InlineTextDelta[], theme: WechatTheme) {
     .join('');
 }
 
-function renderInlineColorStyle(color: string | null | undefined, background: string | null | undefined) {
+function renderInlineColorStyle(
+  color: string | null | undefined,
+  background: string | null | undefined,
+) {
   const styles: string[] = [];
   const resolvedColor = resolveBlockSuiteInlineColor(color);
   const resolvedBackground = resolveBlockSuiteInlineColor(background);

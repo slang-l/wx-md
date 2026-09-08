@@ -8,17 +8,27 @@ import { brandAssetCategories } from '../type/brand-asset.js';
 import { createVerifyRequestOrigin } from './auth.js';
 
 const assetIdSchema = z.string().uuid();
-const tagsSchema = z.array(z.string().trim().min(1).max(20)).max(8)
+const tagsSchema = z
+  .array(z.string().trim().min(1).max(20))
+  .max(8)
   .transform((tags) => [...new Set(tags.map((tag) => tag.toLocaleLowerCase()))]);
-const metadataSchema = z.object({
-  name: z.string().trim().min(1).max(80),
-  category: z.enum(brandAssetCategories),
-  tags: tagsSchema,
-}).strict();
-const createAssetSchema = metadataSchema.extend({
-  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif']),
-  data: z.string().min(4).max(2_100_000).regex(/^[A-Za-z0-9+/]+={0,2}$/),
-}).strict();
+const metadataSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    category: z.enum(brandAssetCategories),
+    tags: tagsSchema,
+  })
+  .strict();
+const createAssetSchema = metadataSchema
+  .extend({
+    mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif']),
+    data: z
+      .string()
+      .min(4)
+      .max(2_100_000)
+      .regex(/^[A-Za-z0-9+/]+={0,2}$/),
+  })
+  .strict();
 
 interface CreateBrandAssetRouterOptions {
   config: AppConfig;
@@ -83,4 +93,3 @@ function parseRequestBody<T>(schema: z.ZodType<T>, body: unknown): T {
   if (!result.success) throw new AppError(400, 'INVALID_REQUEST', 'Invalid request body');
   return result.data;
 }
-

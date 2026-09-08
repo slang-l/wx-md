@@ -150,11 +150,7 @@ function readAccessTokenTtl(value: string | undefined): SignOptions['expiresIn']
   return candidate as SignOptions['expiresIn'];
 }
 
-function readBoolean(
-  name: string,
-  value: string | undefined,
-  fallback: boolean,
-): boolean {
+function readBoolean(name: string, value: string | undefined, fallback: boolean): boolean {
   const candidate = value?.trim().toLowerCase();
 
   if (!candidate) return fallback;

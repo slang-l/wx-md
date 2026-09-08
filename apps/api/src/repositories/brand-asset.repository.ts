@@ -10,4 +10,3 @@ export interface BrandAssetRepository {
   update(input: UpdateBrandAssetInput): Promise<BrandAsset | null>;
   delete(userId: string, assetId: string): Promise<boolean>;
 }
-

@@ -28,133 +28,127 @@ export interface BlockSuiteEditorHandle {
   insertBlocks: (blocks: NormalizedBlock[]) => boolean;
 }
 
-export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEditorProps>(function BlockSuiteEditor(
-  {
-    author,
-    docId,
-    title,
-    updatedAt,
-    blocks,
-    onBlocksChange,
-    onTitleChange,
-  },
-  ref,
-) {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const bridgeRef = useRef<BlockSuiteDocumentBridge | null>(null);
-  const editorRef = useRef<AffineEditorContainer | null>(null);
-  const blocksChangeRef = useRef(onBlocksChange);
-  const titleChangeRef = useRef(onTitleChange);
-
-  blocksChangeRef.current = onBlocksChange;
-  titleChangeRef.current = onTitleChange;
-
-  useImperativeHandle(
+export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEditorProps>(
+  function BlockSuiteEditor(
+    { author, docId, title, updatedAt, blocks, onBlocksChange, onTitleChange },
     ref,
-    () => ({
-      insertBlocks(nextBlocks) {
-        const bridge = bridgeRef.current;
-        const editor = editorRef.current;
-        if (!bridge || !editor || nextBlocks.length === 0) return false;
+  ) {
+    const hostRef = useRef<HTMLDivElement>(null);
+    const bridgeRef = useRef<BlockSuiteDocumentBridge | null>(null);
+    const editorRef = useRef<AffineEditorContainer | null>(null);
+    const blocksChangeRef = useRef(onBlocksChange);
+    const titleChangeRef = useRef(onTitleChange);
 
-        const textSelection = editor.host.selection.find('text');
-        const blockSelection = editor.host.selection.find('block');
-        const anchorBlockId = textSelection?.end.blockId ?? blockSelection?.blockId ?? null;
-        const insertedIds = insertNormalizedBlocks(bridge.doc, nextBlocks, anchorBlockId);
+    blocksChangeRef.current = onBlocksChange;
+    titleChangeRef.current = onTitleChange;
 
-        if (insertedIds.length === 0) return false;
-        focusInsertedContent(editor, insertedIds);
-        return true;
-      },
-    }),
-    [],
-  );
+    useImperativeHandle(
+      ref,
+      () => ({
+        insertBlocks(nextBlocks) {
+          const bridge = bridgeRef.current;
+          const editor = editorRef.current;
+          if (!bridge || !editor || nextBlocks.length === 0) return false;
 
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return undefined;
+          const textSelection = editor.host.selection.find('text');
+          const blockSelection = editor.host.selection.find('block');
+          const anchorBlockId = textSelection?.end.blockId ?? blockSelection?.blockId ?? null;
+          const insertedIds = insertNormalizedBlocks(bridge.doc, nextBlocks, anchorBlockId);
 
-    let disposed = false;
-    let blocksRevision = 0;
-    let blocksTimer: number | undefined;
-    let titleTimer: number | undefined;
-    const commitBlocks = blocksChangeRef.current;
-    const commitTitle = titleChangeRef.current;
+          if (insertedIds.length === 0) return false;
+          focusInsertedContent(editor, insertedIds);
+          return true;
+        },
+      }),
+      [],
+    );
 
-    const bridge = createBlockSuiteDocument(title, blocks);
-    bridgeRef.current = bridge;
+    useEffect(() => {
+      const host = hostRef.current;
+      if (!host) return undefined;
 
-    // This is the same native container used by the in-repo BlockSuite
-    // playground. It owns the title, slash menu and floating format toolbar.
-    const editor = new AffineEditorContainer();
-    editor.doc = bridge.doc;
-    editor.mode = 'page';
-    editor.autofocus = false;
-    editor.className = 'affine-editor-container';
-    editor.setAttribute('aria-label', 'BlockSuite 文档编辑器');
-    host.replaceChildren(editor);
-    editorRef.current = editor;
+      let disposed = false;
+      let blocksRevision = 0;
+      let blocksTimer: number | undefined;
+      let titleTimer: number | undefined;
+      const commitBlocks = blocksChangeRef.current;
+      const commitTitle = titleChangeRef.current;
 
-    const blockDisposable = bridge.doc.slots.blockUpdated.on(() => {
-      window.clearTimeout(blocksTimer);
-      const revision = ++blocksRevision;
-      blocksTimer = window.setTimeout(() => {
-        void normalizedBlocksFromBlockSuiteDoc(bridge.doc).then((nextBlocks) => {
-          if (!disposed && revision === blocksRevision) {
-            commitBlocks(nextBlocks);
-          }
-        });
-      }, 120);
-    });
+      const bridge = createBlockSuiteDocument(title, blocks);
+      bridgeRef.current = bridge;
 
-    const disposeTitleObserver = observeBlockSuiteTitle(bridge.doc, (nextTitle) => {
-      window.clearTimeout(titleTimer);
-      titleTimer = window.setTimeout(() => {
-        if (!disposed) commitTitle(nextTitle);
-      }, 120);
-    });
+      // This is the same native container used by the in-repo BlockSuite
+      // playground. It owns the title, slash menu and floating format toolbar.
+      const editor = new AffineEditorContainer();
+      editor.doc = bridge.doc;
+      editor.mode = 'page';
+      editor.autofocus = false;
+      editor.className = 'affine-editor-container';
+      editor.setAttribute('aria-label', 'BlockSuite 文档编辑器');
+      host.replaceChildren(editor);
+      editorRef.current = editor;
 
-    void editor.getUpdateComplete().then(() => {
-      if (!disposed) {
-        configureEditor(editor);
-        updateDocumentMetadata(editor, author, updatedAt);
-      }
-    });
+      const blockDisposable = bridge.doc.slots.blockUpdated.on(() => {
+        window.clearTimeout(blocksTimer);
+        const revision = ++blocksRevision;
+        blocksTimer = window.setTimeout(() => {
+          void normalizedBlocksFromBlockSuiteDoc(bridge.doc).then((nextBlocks) => {
+            if (!disposed && revision === blocksRevision) {
+              commitBlocks(nextBlocks);
+            }
+          });
+        }, 120);
+      });
 
-    return () => {
-      const shouldFlushBlocks = blocksTimer !== undefined;
-      const shouldFlushTitle = titleTimer !== undefined;
-      disposed = true;
-      window.clearTimeout(blocksTimer);
-      window.clearTimeout(titleTimer);
+      const disposeTitleObserver = observeBlockSuiteTitle(bridge.doc, (nextTitle) => {
+        window.clearTimeout(titleTimer);
+        titleTimer = window.setTimeout(() => {
+          if (!disposed) commitTitle(nextTitle);
+        }, 120);
+      });
 
-      if (shouldFlushBlocks) {
-        void normalizedBlocksFromBlockSuiteDoc(bridge.doc).then(commitBlocks);
-      }
-      if (shouldFlushTitle) {
-        commitTitle(getBlockSuiteTitle(bridge.doc));
-      }
+      void editor.getUpdateComplete().then(() => {
+        if (!disposed) {
+          configureEditor(editor);
+          updateDocumentMetadata(editor, author, updatedAt);
+        }
+      });
 
-      blockDisposable.dispose();
-      disposeTitleObserver();
-      bridgeRef.current = null;
-      editorRef.current = null;
-      host.replaceChildren();
-    };
-  }, [docId]);
+      return () => {
+        const shouldFlushBlocks = blocksTimer !== undefined;
+        const shouldFlushTitle = titleTimer !== undefined;
+        disposed = true;
+        window.clearTimeout(blocksTimer);
+        window.clearTimeout(titleTimer);
 
-  useEffect(() => {
-    if (!bridgeRef.current) return;
-    syncBlockSuiteTitle(bridgeRef.current.doc, title);
-  }, [title]);
+        if (shouldFlushBlocks) {
+          void normalizedBlocksFromBlockSuiteDoc(bridge.doc).then(commitBlocks);
+        }
+        if (shouldFlushTitle) {
+          commitTitle(getBlockSuiteTitle(bridge.doc));
+        }
 
-  useEffect(() => {
-    if (!editorRef.current) return;
-    updateDocumentMetadata(editorRef.current, author, updatedAt);
-  }, [author, updatedAt]);
+        blockDisposable.dispose();
+        disposeTitleObserver();
+        bridgeRef.current = null;
+        editorRef.current = null;
+        host.replaceChildren();
+      };
+    }, [docId]);
 
-  return <div ref={hostRef} className="blocksuite-editor-host h-full min-h-0 w-full" />;
-});
+    useEffect(() => {
+      if (!bridgeRef.current) return;
+      syncBlockSuiteTitle(bridgeRef.current.doc, title);
+    }, [title]);
+
+    useEffect(() => {
+      if (!editorRef.current) return;
+      updateDocumentMetadata(editorRef.current, author, updatedAt);
+    }, [author, updatedAt]);
+
+    return <div ref={hostRef} className="blocksuite-editor-host h-full min-h-0 w-full" />;
+  },
+);
 
 function focusInsertedContent(editor: AffineEditorContainer, insertedIds: string[]) {
   window.requestAnimationFrame(() => {
@@ -185,7 +179,8 @@ function updateDocumentMetadata(editor: AffineEditorContainer, author: string, u
   const viewport = editor.querySelector<HTMLElement>('.affine-page-viewport');
   const docTitle = editor.querySelector<HTMLElement>('doc-title');
   if (viewport) viewport.dataset.workspaceLabel = 'OVERVIEW';
-  if (docTitle) docTitle.dataset.workspaceMeta = `${author || 'Unknown author'}  ·  ${formatWorkspaceDate(updatedAt)}`;
+  if (docTitle)
+    docTitle.dataset.workspaceMeta = `${author || 'Unknown author'}  ·  ${formatWorkspaceDate(updatedAt)}`;
 }
 
 function formatWorkspaceDate(value: string) {

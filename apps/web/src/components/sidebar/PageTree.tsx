@@ -1,9 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import {
-  filterPageTree,
-  type PageNode,
-} from './page-tree-data';
+import { filterPageTree, type PageNode } from './page-tree-data';
 
 interface PageTreeProps {
   nodes: PageNode[];
@@ -106,8 +103,12 @@ function PageTreeNode({
             )}
           </span>
           <span className={`sidebar-page-content ${node.status ? 'has-badge' : ''}`}>
-            <span className="sidebar-page-title" title={node.title}>{node.title}</span>
-            {node.status ? <span className={`sidebar-page-badge is-${node.status}`}>{node.status}</span> : null}
+            <span className="sidebar-page-title" title={node.title}>
+              {node.title}
+            </span>
+            {node.status ? (
+              <span className={`sidebar-page-badge is-${node.status}`}>{node.status}</span>
+            ) : null}
           </span>
         </button>
         {depth === 0 ? (

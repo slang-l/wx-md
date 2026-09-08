@@ -68,7 +68,10 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
     themePopoverRef.current?.focus();
     const handleOutsideClick = (event: PointerEvent) => {
       if (!(event.target instanceof Node)) return;
-      if (!themePopoverRef.current?.contains(event.target) && !themeTriggerRef.current?.contains(event.target)) {
+      if (
+        !themePopoverRef.current?.contains(event.target) &&
+        !themeTriggerRef.current?.contains(event.target)
+      ) {
         setThemeEditorOpen(false);
       }
     };
@@ -85,9 +88,10 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
     };
   }, [themeEditorOpen, closeThemeEditor]);
   const theme = useMemo(
-    () => themeWorkspace.active
-      ? createVisualWechatTheme(themeWorkspace.active.baseThemeId, themeWorkspace.active.settings)
-      : getWechatTheme(themeWorkspace.themeId),
+    () =>
+      themeWorkspace.active
+        ? createVisualWechatTheme(themeWorkspace.active.baseThemeId, themeWorkspace.active.settings)
+        : getWechatTheme(themeWorkspace.themeId),
     [themeWorkspace.active, themeWorkspace.themeId],
   );
   const activeThemeDirty = useMemo(() => {
@@ -96,10 +100,12 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
     const saved = active.savedId
       ? themeWorkspace.savedThemes.find((item) => item.id === active.savedId)
       : undefined;
-    return !saved
-      || saved.name !== active.name.trim().replace(/\s+/g, ' ')
-      || saved.baseThemeId !== active.baseThemeId
-      || JSON.stringify(saved.settings) !== JSON.stringify(active.settings);
+    return (
+      !saved ||
+      saved.name !== active.name.trim().replace(/\s+/g, ' ') ||
+      saved.baseThemeId !== active.baseThemeId ||
+      JSON.stringify(saved.settings) !== JSON.stringify(active.settings)
+    );
   }, [themeWorkspace.active, themeWorkspace.savedThemes]);
   const html = useMemo(() => renderWechatHtml(doc, theme), [doc, theme]);
   const publishHtml = useMemo(
@@ -148,7 +154,11 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
   }, [html, notify]);
 
   const selectBuiltinTheme = (themeId: WechatThemeId) => {
-    setThemeWorkspace((current) => ({ ...current, themeId, active: createInitialActiveTheme(themeId) }));
+    setThemeWorkspace((current) => ({
+      ...current,
+      themeId,
+      active: createInitialActiveTheme(themeId),
+    }));
   };
 
   const selectSavedTheme = (savedTheme: SavedVisualTheme) => {
@@ -169,16 +179,16 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
       setThemeEditorOpen(false);
       return;
     }
-    setThemeWorkspace((current) => current.active
-      ? current
-      : { ...current, active: createInitialActiveTheme(current.themeId) });
+    setThemeWorkspace((current) =>
+      current.active ? current : { ...current, active: createInitialActiveTheme(current.themeId) },
+    );
     setThemeEditorOpen(true);
   };
 
   const updateActiveSettings = (settings: VisualThemeSettings) => {
-    setThemeWorkspace((current) => current.active
-      ? { ...current, active: { ...current.active, settings } }
-      : current);
+    setThemeWorkspace((current) =>
+      current.active ? { ...current, active: { ...current.active, settings } } : current,
+    );
   };
 
   const changeBaseTheme = (baseThemeId: WechatThemeId) => {
@@ -226,7 +236,10 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
           savedId: savedTheme.id,
           settings: { ...savedTheme.settings },
         },
-        savedThemes: [savedTheme, ...current.savedThemes.filter((item) => item.id !== savedTheme.id)],
+        savedThemes: [
+          savedTheme,
+          ...current.savedThemes.filter((item) => item.id !== savedTheme.id),
+        ],
       };
     });
     window.setTimeout(() => setSavingTheme(false), 180);
@@ -249,7 +262,9 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
   const exportActiveTheme = () => {
     const active = themeWorkspace.active;
     if (!active) return;
-    const blob = new Blob([serializeVisualTheme(active)], { type: 'application/json;charset=utf-8' });
+    const blob = new Blob([serializeVisualTheme(active)], {
+      type: 'application/json;charset=utf-8',
+    });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -305,7 +320,9 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
               <FileCode2 size={15} strokeWidth={1.9} />
             </span>
             <div className="min-w-0">
-              <h2 className="m-0 truncate text-[13px] font-semibold tracking-[-0.01em] text-[var(--ui-text)]">微信预览</h2>
+              <h2 className="m-0 truncate text-[13px] font-semibold tracking-[-0.01em] text-[var(--ui-text)]">
+                微信预览
+              </h2>
               <div className="truncate text-[11px] text-[var(--ui-muted)]">内容实时同步</div>
             </div>
           </div>
@@ -328,8 +345,6 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                 onClick={() => setPreviewMode('mobile')}
               />
             </div>
-
-
           </div>
           <div className="preview-actions flex max-w-full shrink-0 items-center justify-end gap-2">
             <ActionButton
@@ -349,34 +364,41 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
               onClick={() => setPublishOpen(true)}
             />
           </div>
+          <button
+            className={`preview-theme-editor-trigger ${themeEditorOpen ? 'is-active' : ''}`}
+            ref={themeTriggerRef}
+            aria-haspopup="dialog"
+            type="button"
+            aria-controls="preview-settings-popover"
+            aria-expanded={themeEditorOpen}
+            aria-label="可视化配置"
+            title="可视化配置"
+            onClick={openThemeEditor}
+          >
+            <SlidersHorizontal size={15} />
+          </button>
+          {onClose ? (
             <button
-              className={`preview-theme-editor-trigger ${themeEditorOpen ? 'is-active' : ''}`}
-              ref={themeTriggerRef}
-              aria-haspopup="dialog"
+              className="preview-pane-close ui-pressable"
               type="button"
-              aria-controls="preview-settings-popover"
-              aria-expanded={themeEditorOpen}
-              aria-label="可视化配置"
-              title="可视化配置"
-              onClick={openThemeEditor}
+              aria-label="关闭预览"
+              title="关闭预览"
+              onClick={onClose}
             >
-              <SlidersHorizontal size={15} />
+              <X size={16} />
             </button>
-            {onClose ? (
-              <button
-                className="preview-pane-close ui-pressable"
-                type="button"
-                aria-label="关闭预览"
-                title="关闭预览"
-                onClick={onClose}
-              >
-                <X size={16} />
-              </button>
-            ) : null}
+          ) : null}
         </header>
 
         {themeEditorOpen && themeWorkspace.active ? (
-          <div id="preview-settings-popover" ref={themePopoverRef} className="preview-settings-popover" role="dialog" aria-label="可视化配置" tabIndex={-1}>
+          <div
+            id="preview-settings-popover"
+            ref={themePopoverRef}
+            className="preview-settings-popover"
+            role="dialog"
+            aria-label="可视化配置"
+            tabIndex={-1}
+          >
             <VisualThemeEditor
               themeSelector={
                 <div className="preview-theme-picker">
@@ -386,7 +408,9 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                   </div>
                   <div className="preview-theme-list flex min-w-0 flex-wrap gap-1.5">
                     {wechatThemes.map((themeOption) => {
-                      const active = !themeWorkspace.active?.savedId && themeOption.id === themeWorkspace.themeId;
+                      const active =
+                        !themeWorkspace.active?.savedId &&
+                        themeOption.id === themeWorkspace.themeId;
 
                       return (
                         <button
@@ -407,7 +431,9 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                             aria-hidden="true"
                           />
                           {themeOption.label}
-                          <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
+                          <span className="grid h-3 w-3 place-items-center">
+                            {active ? <Check size={11} /> : null}
+                          </span>
                         </button>
                       );
                     })}
@@ -426,15 +452,22 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                           title={savedTheme.name}
                           onClick={() => selectSavedTheme(savedTheme)}
                         >
-                          <span className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10" style={{ backgroundColor: savedTheme.settings.accentColor }} />
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10"
+                            style={{ backgroundColor: savedTheme.settings.accentColor }}
+                          />
                           <span className="max-w-24 truncate">{savedTheme.name}</span>
-                          <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
+                          <span className="grid h-3 w-3 place-items-center">
+                            {active ? <Check size={11} /> : null}
+                          </span>
                         </button>
                       );
                     })}
                     {themeWorkspace.active && activeThemeDirty ? (
                       <span className="preview-unsaved-theme">
-                        <span style={{ backgroundColor: themeWorkspace.active.settings.accentColor }} />
+                        <span
+                          style={{ backgroundColor: themeWorkspace.active.settings.accentColor }}
+                        />
                         {themeWorkspace.active.savedId ? '有更改' : '未保存'}
                       </span>
                     ) : null}
@@ -451,10 +484,18 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
               onDelete={themeWorkspace.active.savedId ? deleteActiveTheme : undefined}
               onExport={exportActiveTheme}
               onImport={importTheme}
-              onNameChange={(name) => setThemeWorkspace((current) => current.active
-                ? { ...current, active: { ...current.active, name } }
-                : current)}
-              onReset={() => updateActiveSettings(createDefaultVisualThemeSettings(themeWorkspace.active?.baseThemeId ?? defaultWechatThemeId))}
+              onNameChange={(name) =>
+                setThemeWorkspace((current) =>
+                  current.active ? { ...current, active: { ...current.active, name } } : current,
+                )
+              }
+              onReset={() =>
+                updateActiveSettings(
+                  createDefaultVisualThemeSettings(
+                    themeWorkspace.active?.baseThemeId ?? defaultWechatThemeId,
+                  ),
+                )
+              }
               onSave={saveActiveTheme}
             />
           </div>
@@ -495,7 +536,12 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
 }
 
 function safeFilename(value: string) {
-  return value.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').slice(0, 60) || 'wxmd-theme';
+  return (
+    value
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-')
+      .slice(0, 60) || 'wxmd-theme'
+  );
 }
 
 function DeviceButton({

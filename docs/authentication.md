@@ -20,21 +20,21 @@ HttpOnly Refresh Cookie 维持登录状态。
 
 ### 关键代码位置
 
-| 文件 | 职责 |
-| --- | --- |
-| `apps/api/src/config.ts` | 读取并校验服务端环境变量 |
-| `apps/api/src/server.ts` | 生产式进程入口，创建 PostgreSQL 连接池并注入仓库 |
-| `apps/api/src/app.ts` | 组装 Express、中间件、服务和路由 |
-| `apps/api/src/services/token.service.ts` | 签发/验证 Access JWT，生成并哈希 Refresh Token |
-| `apps/api/src/services/auth.service.ts` | 注册、登录、刷新、重放处理和退出的业务规则 |
-| `apps/api/src/routes/auth.ts` | 输入校验、Cookie 设置和 HTTP 响应 |
-| `apps/api/src/middlewares/auth.middleware.ts` | Bearer JWT 校验与当前用户复查 |
-| `apps/api/src/repositories/auth.repository.ts` | 持久化接口与公开用户字段映射 |
-| `apps/api/src/repositories/postgres.repository.ts` | PostgreSQL 实现和事务化 Token 轮换 |
-| `apps/api/src/repositories/memory.repository.ts` | 面向测试的隔离内存实现 |
-| `apps/api/migrations/001_auth.sql` | `users`、`refresh_sessions` 表和索引 |
-| `apps/web/src/services/auth-api.ts` | 浏览器端 Token 内存管理、刷新合并与请求重试 |
-| `apps/web/src/App.tsx` | 应用启动恢复会话及登录状态切换 |
+| 文件                                               | 职责                                             |
+| -------------------------------------------------- | ------------------------------------------------ |
+| `apps/api/src/config.ts`                           | 读取并校验服务端环境变量                         |
+| `apps/api/src/server.ts`                           | 生产式进程入口，创建 PostgreSQL 连接池并注入仓库 |
+| `apps/api/src/app.ts`                              | 组装 Express、中间件、服务和路由                 |
+| `apps/api/src/services/token.service.ts`           | 签发/验证 Access JWT，生成并哈希 Refresh Token   |
+| `apps/api/src/services/auth.service.ts`            | 注册、登录、刷新、重放处理和退出的业务规则       |
+| `apps/api/src/routes/auth.ts`                      | 输入校验、Cookie 设置和 HTTP 响应                |
+| `apps/api/src/middlewares/auth.middleware.ts`      | Bearer JWT 校验与当前用户复查                    |
+| `apps/api/src/repositories/auth.repository.ts`     | 持久化接口与公开用户字段映射                     |
+| `apps/api/src/repositories/postgres.repository.ts` | PostgreSQL 实现和事务化 Token 轮换               |
+| `apps/api/src/repositories/memory.repository.ts`   | 面向测试的隔离内存实现                           |
+| `apps/api/migrations/001_auth.sql`                 | `users`、`refresh_sessions` 表和索引             |
+| `apps/web/src/services/auth-api.ts`                | 浏览器端 Token 内存管理、刷新合并与请求重试      |
+| `apps/web/src/App.tsx`                             | 应用启动恢复会话及登录状态切换                   |
 
 ## 2. 架构与安全选择
 
@@ -366,22 +366,22 @@ authenticatedRequest('/api/auth/me')
 
 服务端模板位于 `apps/api/.env.example`：
 
-| 变量 | 示例/默认 | 校验和含义 |
-| --- | --- | --- |
-| `NODE_ENV` | `development` | 只允许 `development`、`test`、`production` |
-| `HOST` | `0.0.0.0` | API 监听地址 |
-| `PORT` | `3000` | 1～65535 的整数 |
-| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 显式 Origin 列表，逗号分隔；启用凭据时禁止 `*` |
-| `DATABASE_URL` | `postgresql://wxmd:wxmd@localhost:5432/wxmd` | 必填的 PostgreSQL URL |
-| `JWT_ACCESS_SECRET` | 无安全默认值 | 必填，至少 32 个字符；兼容旧变量名 `JWT_SECRET` |
-| `JWT_ISSUER` | `wx-md-api` | 必填，必须与 Token 验证端一致 |
-| `JWT_AUDIENCE` | `wx-md-web` | 必填，必须与 Token 验证端一致 |
-| `ACCESS_TOKEN_TTL` | `15m` | `数字+s/m/h/d`，实际范围 60 秒～1 天 |
-| `REFRESH_TOKEN_TTL_DAYS` | `7` | 1～90 的整数，表示 family 绝对寿命 |
-| `DEV_ADMIN_ENABLED` | `true`（仅 development） | 是否在 API 启动时幂等初始化本地管理员 |
-| `DEV_ADMIN_EMAIL` | `admin@qq.com` | 本地管理员邮箱 |
-| `DEV_ADMIN_PASSWORD` | `123456` | 本地管理员密码；已知弱口令，不得进入生产 |
-| `DEV_ADMIN_NAME` | `系统管理员` | 本地管理员显示名称 |
+| 变量                     | 示例/默认                                     | 校验和含义                                      |
+| ------------------------ | --------------------------------------------- | ----------------------------------------------- |
+| `NODE_ENV`               | `development`                                 | 只允许 `development`、`test`、`production`      |
+| `HOST`                   | `0.0.0.0`                                     | API 监听地址                                    |
+| `PORT`                   | `3000`                                        | 1～65535 的整数                                 |
+| `CORS_ORIGINS`           | `http://localhost:5173,http://127.0.0.1:5173` | 显式 Origin 列表，逗号分隔；启用凭据时禁止 `*`  |
+| `DATABASE_URL`           | `postgresql://wxmd:wxmd@localhost:5432/wxmd`  | 必填的 PostgreSQL URL                           |
+| `JWT_ACCESS_SECRET`      | 无安全默认值                                  | 必填，至少 32 个字符；兼容旧变量名 `JWT_SECRET` |
+| `JWT_ISSUER`             | `wx-md-api`                                   | 必填，必须与 Token 验证端一致                   |
+| `JWT_AUDIENCE`           | `wx-md-web`                                   | 必填，必须与 Token 验证端一致                   |
+| `ACCESS_TOKEN_TTL`       | `15m`                                         | `数字+s/m/h/d`，实际范围 60 秒～1 天            |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | 1～90 的整数，表示 family 绝对寿命              |
+| `DEV_ADMIN_ENABLED`      | `true`（仅 development）                      | 是否在 API 启动时幂等初始化本地管理员           |
+| `DEV_ADMIN_EMAIL`        | `admin@qq.com`                                | 本地管理员邮箱                                  |
+| `DEV_ADMIN_PASSWORD`     | `123456`                                      | 本地管理员密码；已知弱口令，不得进入生产        |
+| `DEV_ADMIN_NAME`         | `系统管理员`                                  | 本地管理员显示名称                              |
 
 ### 开发管理员
 

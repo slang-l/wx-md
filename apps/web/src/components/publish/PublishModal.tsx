@@ -43,7 +43,8 @@ interface PublishModalProps {
   onCopyLink: (url: string) => void;
 }
 
-type BusyAction = 'loading' | 'saving-config' | 'deleting-config' | 'preparing' | 'publishing' | null;
+type BusyAction =
+  'loading' | 'saving-config' | 'deleting-config' | 'preparing' | 'publishing' | null;
 
 export function PublishModal({ content, doc, open, onClose, onCopyLink }: PublishModalProps) {
   const [config, setConfig] = useState<WechatConfig | null>(null);
@@ -119,7 +120,12 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
   }, [coverFile]);
 
   useEffect(() => {
-    if (!open || !submission || publishStatus?.state === 'published' || publishStatus?.state === 'failed') {
+    if (
+      !open ||
+      !submission ||
+      publishStatus?.state === 'published' ||
+      publishStatus?.state === 'failed'
+    ) {
       return undefined;
     }
 
@@ -224,8 +230,9 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
         encodeImage(coverFile, '封面'),
         prepareArticleContent(content),
       ]);
-      const encodedLength = coverImage.data.length
-        + preparedContent.images.reduce((total, image) => total + image.data.length, 0);
+      const encodedLength =
+        coverImage.data.length +
+        preparedContent.images.reduce((total, image) => total + image.data.length, 0);
       if (encodedLength > MAX_ENCODED_IMAGES_LENGTH) {
         throw new Error('封面和正文图片总大小过大，请压缩后重试');
       }
@@ -261,7 +268,12 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
   };
 
   return (
-    <div className="publish-modal-backdrop ui-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="publish-modal-title">
+    <div
+      className="publish-modal-backdrop ui-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="publish-modal-title"
+    >
       <section className="publish-modal-dialog ui-modal-surface">
         <header className="publish-modal-header">
           <div className="publish-modal-heading">
@@ -273,7 +285,13 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
               <p>{config?.configured ? config.appId : '公众号开发配置'}</p>
             </div>
           </div>
-          <button className="publish-icon-button" type="button" aria-label="关闭" title="关闭" onClick={onClose}>
+          <button
+            className="publish-icon-button"
+            type="button"
+            aria-label="关闭"
+            title="关闭"
+            onClick={onClose}
+          >
             <X size={18} />
           </button>
         </header>
@@ -357,15 +375,26 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
                   <Trash2 size={15} />
                   {confirmDelete ? '确认移除' : '移除配置'}
                 </button>
-              ) : <span />}
+              ) : (
+                <span />
+              )}
               <div className="publish-footer-actions">
                 {config?.configured ? (
-                  <button className="publish-secondary-button" type="button" disabled={isBusy} onClick={() => setEditingConfig(false)}>
+                  <button
+                    className="publish-secondary-button"
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => setEditingConfig(false)}
+                  >
                     取消
                   </button>
                 ) : null}
                 <button className="publish-primary-button" type="submit" disabled={isBusy}>
-                  {busyAction === 'saving-config' ? <LoaderCircle size={16} className="animate-spin" /> : <Save size={16} />}
+                  {busyAction === 'saving-config' ? (
+                    <LoaderCircle size={16} className="animate-spin" />
+                  ) : (
+                    <Save size={16} />
+                  )}
                   验证并保存
                 </button>
               </div>
@@ -399,7 +428,11 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
 
               <div className="publish-compose-grid">
                 <label className={`publish-cover-field ${coverPreviewUrl ? 'has-image' : ''}`}>
-                  {coverPreviewUrl ? <img src={coverPreviewUrl} alt="文章封面" /> : <ImagePlus size={24} />}
+                  {coverPreviewUrl ? (
+                    <img src={coverPreviewUrl} alt="文章封面" />
+                  ) : (
+                    <ImagePlus size={24} />
+                  )}
                   <span>{coverFile ? '更换封面' : '选择封面'}</span>
                   <input
                     type="file"
@@ -411,11 +444,20 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
                 <div className="publish-field-grid">
                   <label className="publish-field publish-field-wide">
                     <span>文章标题</span>
-                    <input value={title} required maxLength={64} onChange={(event) => setTitle(event.target.value)} />
+                    <input
+                      value={title}
+                      required
+                      maxLength={64}
+                      onChange={(event) => setTitle(event.target.value)}
+                    />
                   </label>
                   <label className="publish-field">
                     <span>作者</span>
-                    <input value={author} maxLength={32} onChange={(event) => setAuthor(event.target.value)} />
+                    <input
+                      value={author}
+                      maxLength={32}
+                      onChange={(event) => setAuthor(event.target.value)}
+                    />
                   </label>
                   <label className="publish-field">
                     <span>原文链接</span>
@@ -429,15 +471,28 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
                   </label>
                   <label className="publish-field publish-field-wide">
                     <span>摘要</span>
-                    <textarea value={digest} maxLength={120} rows={3} onChange={(event) => setDigest(event.target.value)} />
+                    <textarea
+                      value={digest}
+                      maxLength={120}
+                      rows={3}
+                      onChange={(event) => setDigest(event.target.value)}
+                    />
                     <small>{digest.length}/120</small>
                   </label>
                 </div>
               </div>
 
               <div className="publish-options" aria-label="发布选项">
-                <ToggleOption label="正文显示封面" checked={showCoverPic} onChange={setShowCoverPic} />
-                <ToggleOption label="开启评论" checked={needOpenComment} onChange={setNeedOpenComment} />
+                <ToggleOption
+                  label="正文显示封面"
+                  checked={showCoverPic}
+                  onChange={setShowCoverPic}
+                />
+                <ToggleOption
+                  label="开启评论"
+                  checked={needOpenComment}
+                  onChange={setNeedOpenComment}
+                />
                 <ToggleOption
                   label="仅粉丝可评论"
                   checked={onlyFansCanComment}
@@ -450,12 +505,25 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
             <footer className="publish-modal-footer">
               <span className="publish-footer-meta">{config?.appId}</span>
               <div className="publish-footer-actions">
-                <button className="publish-secondary-button" type="button" disabled={isBusy} onClick={onClose}>
+                <button
+                  className="publish-secondary-button"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={onClose}
+                >
                   取消
                 </button>
                 <button className="publish-primary-button" type="submit" disabled={isBusy}>
-                  {isBusy ? <LoaderCircle size={16} className="animate-spin" /> : <Send size={16} />}
-                  {busyAction === 'preparing' ? '正在处理图片' : busyAction === 'publishing' ? '正在提交' : '发布到公众号'}
+                  {isBusy ? (
+                    <LoaderCircle size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                  {busyAction === 'preparing'
+                    ? '正在处理图片'
+                    : busyAction === 'publishing'
+                      ? '正在提交'
+                      : '发布到公众号'}
                 </button>
               </div>
             </footer>
@@ -484,8 +552,16 @@ function PublishStatusView({
 
   return (
     <div className="publish-result">
-      <div className={`publish-result-icon ${published ? 'is-success' : failed ? 'is-error' : 'is-pending'}`}>
-        {published ? <CheckCircle2 size={28} /> : failed ? <XCircle size={28} /> : <LoaderCircle size={28} className="animate-spin" />}
+      <div
+        className={`publish-result-icon ${published ? 'is-success' : failed ? 'is-error' : 'is-pending'}`}
+      >
+        {published ? (
+          <CheckCircle2 size={28} />
+        ) : failed ? (
+          <XCircle size={28} />
+        ) : (
+          <LoaderCircle size={28} className="animate-spin" />
+        )}
       </div>
       <h3>{published ? '发布成功' : failed ? '发布未完成' : '已提交到微信'}</h3>
       <p>{status.message}</p>
@@ -521,7 +597,11 @@ function PublishStatusView({
             关闭
           </button>
           {status.articleUrl ? (
-            <button className="publish-primary-button" type="button" onClick={() => onCopyLink(status.articleUrl!)}>
+            <button
+              className="publish-primary-button"
+              type="button"
+              onClick={() => onCopyLink(status.articleUrl!)}
+            >
               <Copy size={16} />
               复制链接
             </button>
@@ -557,7 +637,9 @@ function ToggleOption({
   );
 }
 
-async function prepareArticleContent(html: string): Promise<{ html: string; images: WechatContentImage[] }> {
+async function prepareArticleContent(
+  html: string,
+): Promise<{ html: string; images: WechatContentImage[] }> {
   const parsed = new DOMParser().parseFromString(html, 'text/html');
   const imageElements = Array.from(parsed.body.querySelectorAll<HTMLImageElement>('img[src]'));
   const images: WechatContentImage[] = [];
@@ -590,9 +672,9 @@ async function prepareArticleContent(html: string): Promise<{ html: string; imag
 function isWechatHostedImage(value: string): boolean {
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && (
-      url.hostname === 'mmbiz.qpic.cn'
-      || url.hostname.endsWith('.mmbiz.qpic.cn')
+    return (
+      url.protocol === 'https:' &&
+      (url.hostname === 'mmbiz.qpic.cn' || url.hostname.endsWith('.mmbiz.qpic.cn'))
     );
   } catch {
     return false;

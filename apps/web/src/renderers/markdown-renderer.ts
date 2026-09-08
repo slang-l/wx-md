@@ -40,7 +40,9 @@ function renderMarkdownBlock(block: NormalizedBlock) {
         .join('\n');
     case 'numbered-list':
       return (block.items ?? [])
-        .map((item, index) => `${index + 1}. ${renderMarkdownInline(block.itemDeltas?.[index], item)}`)
+        .map(
+          (item, index) => `${index + 1}. ${renderMarkdownInline(block.itemDeltas?.[index], item)}`,
+        )
         .join('\n');
     case 'todo-list':
       return (block.items ?? [])

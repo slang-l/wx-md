@@ -9,7 +9,10 @@ export interface BlockSuiteDocumentBridge {
   doc: Doc;
 }
 
-export function createBlockSuiteDocument(title: string, blocks: NormalizedBlock[]): BlockSuiteDocumentBridge {
+export function createBlockSuiteDocument(
+  title: string,
+  blocks: NormalizedBlock[],
+): BlockSuiteDocumentBridge {
   const setup = createEmptyDoc();
   const doc = setup.init();
   const note = getDefaultNote(doc);
@@ -54,7 +57,10 @@ export async function normalizedBlocksFromBlockSuiteDoc(doc: Doc): Promise<Norma
       const checked: boolean[] = [];
       const firstId = child.id;
 
-      while (children[index]?.flavour === 'affine:list' && getListType(children[index]) === listType) {
+      while (
+        children[index]?.flavour === 'affine:list' &&
+        getListType(children[index]) === listType
+      ) {
         items.push(getModelText(children[index]));
         itemDeltas.push(getModelDelta(children[index]));
         checked.push(getListChecked(children[index]));
@@ -65,7 +71,11 @@ export async function normalizedBlocksFromBlockSuiteDoc(doc: Doc): Promise<Norma
       blocks.push({
         id: firstId,
         type:
-          listType === 'numbered' ? 'numbered-list' : listType === 'todo' ? 'todo-list' : 'bulleted-list',
+          listType === 'numbered'
+            ? 'numbered-list'
+            : listType === 'todo'
+              ? 'todo-list'
+              : 'bulleted-list',
         items,
         itemDeltas,
         ...(listType === 'todo' ? { checked } : {}),
@@ -158,19 +168,30 @@ function appendNormalizedBlock(
 ): string[] {
   switch (block.type) {
     case 'heading':
-      return [appendParagraph(doc, note, `h${block.level ?? 2}` as ParagraphType, block.text ?? '', block.delta, index)];
+      return [
+        appendParagraph(
+          doc,
+          note,
+          `h${block.level ?? 2}` as ParagraphType,
+          block.text ?? '',
+          block.delta,
+          index,
+        ),
+      ];
     case 'quote':
       return [appendParagraph(doc, note, 'quote', block.text ?? '', block.delta, index)];
     case 'code':
-      return [doc.addBlock(
-        'affine:code',
-        {
-          text: new Text(block.text ?? ''),
-          language: block.language ?? 'Plain Text',
-        },
-        note.id,
-        index,
-      )];
+      return [
+        doc.addBlock(
+          'affine:code',
+          {
+            text: new Text(block.text ?? ''),
+            language: block.language ?? 'Plain Text',
+          },
+          note.id,
+          index,
+        ),
+      ];
     case 'bulleted-list':
     case 'numbered-list':
     case 'todo-list': {
@@ -181,7 +202,11 @@ function appendNormalizedBlock(
           'affine:list',
           {
             type:
-              block.type === 'numbered-list' ? 'numbered' : block.type === 'todo-list' ? 'todo' : 'bulleted',
+              block.type === 'numbered-list'
+                ? 'numbered'
+                : block.type === 'todo-list'
+                  ? 'todo'
+                  : 'bulleted',
             text: new Text(textFromDelta(delta, item)),
             checked: block.checked?.[itemIndex] ?? false,
             collapsed: false,
@@ -283,7 +308,7 @@ function getDefaultNote(doc: Doc) {
 }
 
 function getRootTitle(doc: Doc) {
-  return ((doc.root as (BlockModel & { title?: Text }) | null)?.title ?? null);
+  return (doc.root as (BlockModel & { title?: Text }) | null)?.title ?? null;
 }
 
 function getParagraphType(model: BlockModel): ParagraphType {
@@ -311,7 +336,12 @@ function getModelDelta(model: BlockModel): InlineTextDelta[] {
   const delta = model.text?.toDelta() ?? [];
   return delta.flatMap((operation) => {
     if (typeof operation.insert !== 'string') return [];
-    return [{ insert: operation.insert, ...(operation.attributes ? { attributes: operation.attributes } : {}) }];
+    return [
+      {
+        insert: operation.insert,
+        ...(operation.attributes ? { attributes: operation.attributes } : {}),
+      },
+    ];
   });
 }
 
