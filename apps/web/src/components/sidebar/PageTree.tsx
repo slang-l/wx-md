@@ -1,8 +1,7 @@
-import { ChevronDown, Circle, Diamond, Square } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import {
   filterPageTree,
-  type PageIcon,
   type PageNode,
 } from './page-tree-data';
 
@@ -32,7 +31,7 @@ export function PageTree({ nodes, query, selectedId, onAddChild, onSelect }: Pag
   };
 
   if (visibleNodes.length === 0) {
-    return <p className="sidebar-page-tree-empty">No pages found</p>;
+    return <p className="sidebar-page-tree-empty">未找到页面</p>;
   }
 
   return (
@@ -103,9 +102,8 @@ function PageTreeNode({
             {hasChildren ? (
               <ChevronDown className={expanded ? '' : 'is-collapsed'} size={10} strokeWidth={1.5} />
             ) : (
-              <span className="sidebar-page-chevron-spacer" />
+              <span className="sidebar-page-dot">·</span>
             )}
-            <PageGlyph icon={node.icon} />
           </span>
           <span className={`sidebar-page-content ${node.status ? 'has-badge' : ''}`}>
             <span className="sidebar-page-title" title={node.title}>{node.title}</span>
@@ -144,12 +142,4 @@ function PageTreeNode({
       ) : null}
     </div>
   );
-}
-
-function PageGlyph({ icon }: { icon: PageIcon }) {
-  const commonProps = { size: 9, strokeWidth: 1.35 };
-
-  if (icon === 'circle') return <Circle {...commonProps} />;
-  if (icon === 'square') return <Square {...commonProps} />;
-  return <Diamond {...commonProps} />;
 }

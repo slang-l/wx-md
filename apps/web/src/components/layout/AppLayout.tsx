@@ -42,7 +42,7 @@ const MIN_SIDEBAR_WIDTH = 220;
 const MAX_SIDEBAR_WIDTH = 420;
 const MIN_PREVIEW_WIDTH = 320;
 const MAX_PREVIEW_WIDTH = 760;
-const DEFAULT_SIDEBAR_WIDTH = 264;
+const DEFAULT_SIDEBAR_WIDTH = 250;
 const DEFAULT_PREVIEW_WIDTH = 480;
 
 interface AppLayoutProps {
@@ -246,6 +246,137 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
         ref={shellRef}
         className={`workspace-shell ${darkMode ? 'workspace-dark' : ''} ${activeResize ? 'is-resizing' : ''}`}
       >
+        <header className="workspace-topbar">
+          <div className="workspace-breadcrumb-wrap">
+            <button
+              className="workspace-icon-button"
+              type="button"
+              aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+              title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+              onClick={() => setSidebarOpen((open) => !open)}
+            >
+              <Menu size={18} strokeWidth={1.7} />
+            </button>
+            <nav className="workspace-breadcrumb" aria-label="面包屑导航">
+              <span>工作区</span>
+              <span aria-hidden="true">/</span>
+              <strong title={displayTitle}>{displayTitle}</strong>
+            </nav>
+          </div>
+
+          <div className="workspace-actions">
+            <button
+              className="workspace-component-button"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={componentLibraryOpen}
+              onClick={() => {
+                setBrandAssetLibraryOpen(false);
+                setComponentLibraryOpen(true);
+              }}
+            >
+              <LibraryBig size={15} />
+              <span>组件</span>
+            </button>
+            <button
+              className="workspace-component-button"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={brandAssetLibraryOpen}
+              onClick={() => {
+                setComponentLibraryOpen(false);
+                setBrandAssetLibraryOpen(true);
+              }}
+            >
+              <Images size={15} />
+              <span>素材</span>
+            </button>
+            <button
+              className="workspace-theme-button"
+              type="button"
+              aria-pressed={darkMode}
+              onClick={() => setDarkMode((active) => !active)}
+            >
+              {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+              <span>{darkMode ? 'light' : 'dark'}</span>
+            </button>
+            <button
+              className={`workspace-preview-button ${previewOpen ? 'is-active' : ''}`}
+              type="button"
+              aria-controls="workspace-preview-pane"
+              aria-expanded={previewOpen}
+              onClick={() => setPreviewOpen((open) => !open)}
+            >
+              <PanelRight size={15} />
+              <span>预览</span>
+            </button>
+
+            <div ref={menuRef} className="workspace-account-menu-wrap">
+              <button
+                className="workspace-icon-button"
+                type="button"
+                aria-label="更多操作"
+                aria-expanded={accountMenuOpen}
+                onClick={() => setAccountMenuOpen((open) => !open)}
+              >
+                <MoreHorizontal size={18} />
+              </button>
+              <button
+                className="workspace-avatar"
+                type="button"
+                aria-label={`${user.name} 的账户菜单`}
+                aria-expanded={accountMenuOpen}
+                onClick={() => setAccountMenuOpen((open) => !open)}
+              >
+                {userInitials}
+              </button>
+
+              {accountMenuOpen ? (
+                <div className="workspace-account-menu" role="menu">
+                  <div className="workspace-account-summary">
+                    <span className="workspace-account-avatar">{userInitials}</span>
+                    <span>
+                      <strong>{user.name}</strong>
+                      <small>{user.email}</small>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      createDoc();
+                      setAccountMenuOpen(false);
+                    }}
+                  >
+                    <Plus size={15} />
+                    New page
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsOpen(true);
+                      setAccountMenuOpen(false);
+                    }}
+                  >
+                    <Settings size={15} />
+                    Settings
+                  </button>
+                  <button
+                    className="is-danger"
+                    type="button"
+                    role="menuitem"
+                    disabled={isSigningOut}
+                    onClick={onSignOut}
+                  >
+                    <LogOut size={15} />
+                    {isSigningOut ? 'Signing out…' : 'Sign out'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </header>
         <button
           className={`workspace-sidebar-backdrop ${sidebarOpen ? 'is-visible' : ''}`}
           type="button"
@@ -284,138 +415,6 @@ export function AppLayout({ isSigningOut, onSignOut, user }: AppLayoutProps) {
         ) : null}
 
         <section className="workspace-main">
-          <header className="workspace-topbar">
-            <div className="workspace-breadcrumb-wrap">
-              <button
-                className="workspace-icon-button"
-                type="button"
-                aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
-                title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
-                onClick={() => setSidebarOpen((open) => !open)}
-              >
-                <Menu size={18} strokeWidth={1.7} />
-              </button>
-              <nav className="workspace-breadcrumb" aria-label="面包屑导航">
-                <span>workspace</span>
-                <span aria-hidden="true">/</span>
-                <strong title={displayTitle}>{displayTitle}</strong>
-              </nav>
-            </div>
-
-            <div className="workspace-actions">
-              <button
-                className="workspace-component-button"
-                type="button"
-                aria-haspopup="dialog"
-                aria-expanded={componentLibraryOpen}
-                onClick={() => {
-                  setBrandAssetLibraryOpen(false);
-                  setComponentLibraryOpen(true);
-                }}
-              >
-                <LibraryBig size={15} />
-                <span>组件</span>
-              </button>
-              <button
-                className="workspace-component-button"
-                type="button"
-                aria-haspopup="dialog"
-                aria-expanded={brandAssetLibraryOpen}
-                onClick={() => {
-                  setComponentLibraryOpen(false);
-                  setBrandAssetLibraryOpen(true);
-                }}
-              >
-                <Images size={15} />
-                <span>素材</span>
-              </button>
-              <button
-                className="workspace-theme-button"
-                type="button"
-                aria-pressed={darkMode}
-                onClick={() => setDarkMode((active) => !active)}
-              >
-                {darkMode ? <Sun size={15} /> : <Moon size={15} />}
-                <span>{darkMode ? 'light' : 'dark'}</span>
-              </button>
-              <button
-                className={`workspace-preview-button ${previewOpen ? 'is-active' : ''}`}
-                type="button"
-                aria-controls="workspace-preview-pane"
-                aria-expanded={previewOpen}
-                onClick={() => setPreviewOpen((open) => !open)}
-              >
-                <PanelRight size={15} />
-                <span>预览</span>
-              </button>
-
-              <div ref={menuRef} className="workspace-account-menu-wrap">
-                <button
-                  className="workspace-icon-button"
-                  type="button"
-                  aria-label="更多操作"
-                  aria-expanded={accountMenuOpen}
-                  onClick={() => setAccountMenuOpen((open) => !open)}
-                >
-                  <MoreHorizontal size={18} />
-                </button>
-                <button
-                  className="workspace-avatar"
-                  type="button"
-                  aria-label={`${user.name} 的账户菜单`}
-                  aria-expanded={accountMenuOpen}
-                  onClick={() => setAccountMenuOpen((open) => !open)}
-                >
-                  {userInitials}
-                </button>
-
-                {accountMenuOpen ? (
-                  <div className="workspace-account-menu" role="menu">
-                    <div className="workspace-account-summary">
-                      <span className="workspace-account-avatar">{userInitials}</span>
-                      <span>
-                        <strong>{user.name}</strong>
-                        <small>{user.email}</small>
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        createDoc();
-                        setAccountMenuOpen(false);
-                      }}
-                    >
-                      <Plus size={15} />
-                      New page
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setSettingsOpen(true);
-                        setAccountMenuOpen(false);
-                      }}
-                    >
-                      <Settings size={15} />
-                      Settings
-                    </button>
-                    <button
-                      className="is-danger"
-                      type="button"
-                      role="menuitem"
-                      disabled={isSigningOut}
-                      onClick={onSignOut}
-                    >
-                      <LogOut size={15} />
-                      {isSigningOut ? 'Signing out…' : 'Sign out'}
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </header>
-
           <div className="workspace-content">
             <div className="workspace-editor-area">
               <EditorColumn

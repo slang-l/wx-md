@@ -11,7 +11,7 @@ import {
   Smartphone,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Toast, type ToastState } from '../common/Toast';
 import { PublishModal } from '../publish/PublishModal';
 import { renderMarkdown } from '../../renderers/markdown-renderer';
@@ -55,6 +55,35 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [themeEditorOpen, setThemeEditorOpen] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
+  const themePopoverRef = useRef<HTMLDivElement>(null);
+  const themeTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const closeThemeEditor = useCallback(() => {
+    setThemeEditorOpen(false);
+    themeTriggerRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!themeEditorOpen) return;
+    themePopoverRef.current?.focus();
+    const handleOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (!themePopoverRef.current?.contains(event.target) && !themeTriggerRef.current?.contains(event.target)) {
+        setThemeEditorOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      closeThemeEditor();
+    };
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [themeEditorOpen, closeThemeEditor]);
   const theme = useMemo(
     () => themeWorkspace.active
       ? createVisualWechatTheme(themeWorkspace.active.baseThemeId, themeWorkspace.active.settings)
@@ -119,8 +148,7 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
   }, [html, notify]);
 
   const selectBuiltinTheme = (themeId: WechatThemeId) => {
-    setThemeWorkspace((current) => ({ ...current, themeId, active: null }));
-    setThemeEditorOpen(false);
+    setThemeWorkspace((current) => ({ ...current, themeId, active: createInitialActiveTheme(themeId) }));
   };
 
   const selectSavedTheme = (savedTheme: SavedVisualTheme) => {
@@ -270,10 +298,10 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
   return (
     <>
       <Toast toast={toast} />
-      <aside className="preview-pane flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#ebe9e3]">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--ui-line)] bg-[rgba(255,254,250,0.94)] px-4 backdrop-blur">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[var(--ui-status-success-soft)] text-[var(--ui-status-success)]">
+      <aside className="preview-pane flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--ui-surface-subtle)]">
+        <header className="preview-toolbar">
+          <div className="preview-heading flex min-w-0 items-center gap-2.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[var(--ui-surface-subtle)] text-[var(--ui-text-secondary)]">
               <FileCode2 size={15} strokeWidth={1.9} />
             </span>
             <div className="min-w-0">
@@ -300,6 +328,40 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                 onClick={() => setPreviewMode('mobile')}
               />
             </div>
+
+
+          </div>
+          <div className="preview-actions flex max-w-full shrink-0 items-center justify-end gap-2">
+            <ActionButton
+              icon={<Copy size={15} />}
+              label="复制到微信"
+              primary
+              onClick={handleCopyToWechat}
+            />
+            <ActionButton
+              icon={<Code2 size={15} />}
+              label="复制 Markdown"
+              onClick={() => handleCopyText(markdown, 'Markdown')}
+            />
+            <ActionButton
+              icon={<Send size={15} />}
+              label="一键发布"
+              onClick={() => setPublishOpen(true)}
+            />
+          </div>
+            <button
+              className={`preview-theme-editor-trigger ${themeEditorOpen ? 'is-active' : ''}`}
+              ref={themeTriggerRef}
+              aria-haspopup="dialog"
+              type="button"
+              aria-controls="preview-settings-popover"
+              aria-expanded={themeEditorOpen}
+              aria-label="可视化配置"
+              title="可视化配置"
+              onClick={openThemeEditor}
+            >
+              <SlidersHorizontal size={15} />
+            </button>
             {onClose ? (
               <button
                 className="preview-pane-close ui-pressable"
@@ -311,120 +373,91 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
                 <X size={16} />
               </button>
             ) : null}
-          </div>
         </header>
 
-        <section className="preview-toolbar grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--ui-line)] bg-[var(--ui-surface)] px-4 py-2.5">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <div className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ui-text-muted)]">
-              <Palette size={14} />
-              主题
-            </div>
-            <div className="preview-theme-list flex min-w-0 gap-1.5 overflow-x-auto">
-              {wechatThemes.map((themeOption) => {
-                const active = !themeWorkspace.active && themeOption.id === themeWorkspace.themeId;
-
-                return (
-                  <button
-                    key={themeOption.id}
-                    className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
-                      active
-                        ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
-                        : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
-                    }`}
-                    type="button"
-                    title={themeOption.description}
-                    aria-pressed={active}
-                    onClick={() => selectBuiltinTheme(themeOption.id)}
-                  >
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10"
-                      style={{ backgroundColor: themeOption.swatch }}
-                      aria-hidden="true"
-                    />
-                    {themeOption.label}
-                    <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
-                  </button>
-                );
-              })}
-              {themeWorkspace.savedThemes.map((savedTheme) => {
-                const active = themeWorkspace.active?.savedId === savedTheme.id;
-                return (
-                  <button
-                    key={savedTheme.id}
-                    className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
-                      active
-                        ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
-                        : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
-                    }`}
-                    type="button"
-                    aria-pressed={active}
-                    title={savedTheme.name}
-                    onClick={() => selectSavedTheme(savedTheme)}
-                  >
-                    <span className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10" style={{ backgroundColor: savedTheme.settings.accentColor }} />
-                    <span className="max-w-24 truncate">{savedTheme.name}</span>
-                    <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
-                  </button>
-                );
-              })}
-              {themeWorkspace.active && activeThemeDirty ? (
-                <span className="preview-unsaved-theme">
-                  <span style={{ backgroundColor: themeWorkspace.active.settings.accentColor }} />
-                  {themeWorkspace.active.savedId ? '有更改' : '未保存'}
-                </span>
-              ) : null}
-            </div>
-            <button
-              className={`preview-theme-editor-trigger ${themeEditorOpen ? 'is-active' : ''}`}
-              type="button"
-              aria-controls="visual-theme-editor"
-              aria-expanded={themeEditorOpen}
-              aria-label="编辑主题"
-              title="编辑主题"
-              onClick={openThemeEditor}
-            >
-              <SlidersHorizontal size={15} />
-            </button>
-          </div>
-          <div className="preview-actions flex max-w-full shrink-0 items-center justify-end gap-2">
-            <ActionButton
-              icon={<Copy size={15} />}
-              label="复制到微信"
-              primary
-              onClick={handleCopyToWechat}
-            />
-            <ActionButton
-              icon={<Code2 size={15} />}
-              label="Markdown"
-              onClick={() => handleCopyText(markdown, 'Markdown')}
-            />
-            <ActionButton
-              icon={<Send size={15} />}
-              label="一键发布"
-              onClick={() => setPublishOpen(true)}
-            />
-          </div>
-        </section>
-
         {themeEditorOpen && themeWorkspace.active ? (
-          <VisualThemeEditor
-            active={themeWorkspace.active}
-            dirty={activeThemeDirty}
-            savedCount={themeWorkspace.savedThemes.length}
-            saving={savingTheme}
-            onBaseChange={changeBaseTheme}
-            onChange={updateActiveSettings}
-            onClose={() => setThemeEditorOpen(false)}
-            onDelete={themeWorkspace.active.savedId ? deleteActiveTheme : undefined}
-            onExport={exportActiveTheme}
-            onImport={importTheme}
-            onNameChange={(name) => setThemeWorkspace((current) => current.active
-              ? { ...current, active: { ...current.active, name } }
-              : current)}
-            onReset={() => updateActiveSettings(createDefaultVisualThemeSettings(themeWorkspace.active?.baseThemeId ?? defaultWechatThemeId))}
-            onSave={saveActiveTheme}
-          />
+          <div id="preview-settings-popover" ref={themePopoverRef} className="preview-settings-popover" role="dialog" aria-label="可视化配置" tabIndex={-1}>
+            <VisualThemeEditor
+              themeSelector={
+                <div className="preview-theme-picker">
+                  <div className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ui-text-muted)]">
+                    <Palette size={14} />
+                    主题
+                  </div>
+                  <div className="preview-theme-list flex min-w-0 flex-wrap gap-1.5">
+                    {wechatThemes.map((themeOption) => {
+                      const active = !themeWorkspace.active?.savedId && themeOption.id === themeWorkspace.themeId;
+
+                      return (
+                        <button
+                          key={themeOption.id}
+                          className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
+                            active
+                              ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
+                              : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
+                          }`}
+                          type="button"
+                          title={themeOption.description}
+                          aria-pressed={active}
+                          onClick={() => selectBuiltinTheme(themeOption.id)}
+                        >
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10"
+                            style={{ backgroundColor: themeOption.swatch }}
+                            aria-hidden="true"
+                          />
+                          {themeOption.label}
+                          <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
+                        </button>
+                      );
+                    })}
+                    {themeWorkspace.savedThemes.map((savedTheme) => {
+                      const active = themeWorkspace.active?.savedId === savedTheme.id;
+                      return (
+                        <button
+                          key={savedTheme.id}
+                          className={`ui-pressable flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 text-xs ${
+                            active
+                              ? 'border-[var(--ui-accent-border)] bg-[var(--ui-accent-soft)] font-medium text-[var(--ui-accent)]'
+                              : 'border-[var(--ui-line)] bg-[var(--ui-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-line-strong)] hover:bg-[var(--ui-subtle)]'
+                          }`}
+                          type="button"
+                          aria-pressed={active}
+                          title={savedTheme.name}
+                          onClick={() => selectSavedTheme(savedTheme)}
+                        >
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10" style={{ backgroundColor: savedTheme.settings.accentColor }} />
+                          <span className="max-w-24 truncate">{savedTheme.name}</span>
+                          <span className="grid h-3 w-3 place-items-center">{active ? <Check size={11} /> : null}</span>
+                        </button>
+                      );
+                    })}
+                    {themeWorkspace.active && activeThemeDirty ? (
+                      <span className="preview-unsaved-theme">
+                        <span style={{ backgroundColor: themeWorkspace.active.settings.accentColor }} />
+                        {themeWorkspace.active.savedId ? '有更改' : '未保存'}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              }
+              active={themeWorkspace.active}
+              dirty={activeThemeDirty}
+              savedCount={themeWorkspace.savedThemes.length}
+              saving={savingTheme}
+              onBaseChange={changeBaseTheme}
+              onChange={updateActiveSettings}
+              onClose={closeThemeEditor}
+              onDelete={themeWorkspace.active.savedId ? deleteActiveTheme : undefined}
+              onExport={exportActiveTheme}
+              onImport={importTheme}
+              onNameChange={(name) => setThemeWorkspace((current) => current.active
+                ? { ...current, active: { ...current.active, name } }
+                : current)}
+              onReset={() => updateActiveSettings(createDefaultVisualThemeSettings(themeWorkspace.active?.baseThemeId ?? defaultWechatThemeId))}
+              onSave={saveActiveTheme}
+            />
+          </div>
         ) : null}
 
         <div className="preview-stage min-h-0 flex-1 overflow-auto p-5 lg:p-6">
@@ -514,6 +547,7 @@ function ActionButton({
       }`}
       type="button"
       title={label}
+      aria-label={label}
       onClick={onClick}
     >
       {icon}

@@ -13,6 +13,7 @@ import './visual-theme-editor.css';
 type EditorTab = 'colors' | 'typography' | 'elements';
 
 interface VisualThemeEditorProps {
+  themeSelector: ReactNode;
   active: ActiveVisualTheme;
   dirty: boolean;
   savedCount: number;
@@ -50,7 +51,7 @@ const templateDescriptions: Record<WechatThemeId, string> = {
 };
 
 export function VisualThemeEditor({
-  active, dirty, savedCount, saving, onBaseChange, onChange, onClose,
+  themeSelector, active, dirty, savedCount, saving, onBaseChange, onChange, onClose,
   onDelete, onExport, onImport, onNameChange, onReset, onSave,
 }: VisualThemeEditorProps) {
   const [tab, setTab] = useState<EditorTab>('colors');
@@ -129,6 +130,7 @@ export function VisualThemeEditor({
         role="tabpanel" aria-labelledby={`${id}-tab-${tab}`} tabIndex={0}
         style={{ '--theme-sample-accent': active.settings.accentColor } as CSSProperties}
       >
+        {themeSelector}
         {tab === 'colors' ? (
           <>
             <ControlSection title="基础模板" description="切换模板将重置当前样式">

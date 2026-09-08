@@ -3,18 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --ui-background: #efeee9;
-  --ui-surface: #fffefa;
-  --ui-surface-subtle: #f5f3ee;
+  --ui-background: #fafafa;
+  --ui-surface: #ffffff;
+  --ui-surface-subtle: #f5f5f6;
   --ui-border: rgba(41, 39, 34, 0.1);
   --ui-border-strong: rgba(41, 39, 34, 0.18);
-  --ui-text: #292722;
-  --ui-text-secondary: #625f57;
-  --ui-text-muted: #8a867d;
-  --ui-primary: #5367d8;
-  --ui-primary-hover: #4659c3;
-  --ui-primary-soft: #eef0fb;
-  --ui-primary-border: #cfd5f4;
+  --ui-text: #202124;
+  --ui-text-secondary: #696d75;
+  --ui-text-muted: #999da5;
+  --ui-primary: #202124;
+  --ui-primary-hover: #35363a;
+  --ui-primary-soft: #f2f2f3;
+  --ui-primary-border: #dedee2;
   --ui-status-success: #267357;
   --ui-status-success-soft: #edf6f1;
   --ui-status-danger: #b34b48;
@@ -581,7 +581,7 @@ textarea:focus-visible {
   margin: 0 auto;
   padding: 68px 48px 0;
   color: var(--workspace-editor-eyebrow, #a3a5aa);
-  content: "◇  " attr(data-workspace-label);
+  content: attr(data-workspace-label);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 11px;
   font-weight: 600;
@@ -723,10 +723,10 @@ textarea:focus-visible {
   --ui-text: #171719;
   --ui-text-secondary: #55565b;
   --ui-text-muted: #96979c;
-  --ui-primary: #5865f2;
-  --ui-primary-hover: #4855dd;
-  --ui-primary-soft: #eef0ff;
-  --ui-primary-border: #cdd2ff;
+  --ui-primary: #202124;
+  --ui-primary-hover: #35363a;
+  --ui-primary-soft: #f2f2f3;
+  --ui-primary-border: #dedee2;
   position: relative;
   display: flex;
   width: 100%;
@@ -1665,8 +1665,8 @@ textarea:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  color: white !important;
-  background: linear-gradient(145deg, #6376ff, #6840df) !important;
+  color: var(--ui-text-secondary) !important;
+  background: var(--ui-surface-subtle) !important;
   font-size: 11px;
   font-weight: 700;
 }
@@ -2883,6 +2883,128 @@ textarea:focus-visible {
   min-height: 680px;
 }
 
+/* Reference-inspired neutral workspace and spacious page navigation. */
+.workspace-shell {
+  --workspace-sidebar-bg: #f9f9fa;
+  --workspace-hover: #f0f0f2;
+  --workspace-active: #ffffff;
+  padding-top: 52px;
+}
+.workspace-shell.workspace-dark {
+  --workspace-sidebar-bg: #202124;
+  --workspace-hover: #2a2b2f;
+  --workspace-active: #35363b;
+  --ui-primary: #e5e5e7;
+  --ui-primary-hover: #ffffff;
+  --ui-primary-soft: #303136;
+  --ui-primary-border: #414249;
+}
+.workspace-topbar {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 52px;
+  background: var(--workspace-canvas);
+  padding: 0 14px;
+}
+.workspace-breadcrumb { font-family: inherit; font-size: 14px; }
+.workspace-component-button,
+.workspace-theme-button { background: var(--workspace-canvas) !important; }
+.workspace-preview-button.is-active {
+  color: var(--workspace-canvas) !important;
+  background: var(--ui-text) !important;
+  border-color: var(--ui-text) !important;
+}
+.notion-sidebar {
+  --sidebar-bg: var(--workspace-sidebar-bg);
+  --sidebar-border: var(--workspace-border);
+  --sidebar-hover: var(--workspace-hover);
+  --sidebar-selected: var(--workspace-canvas);
+  --sidebar-text: #858a94;
+  --sidebar-text-strong: var(--ui-text);
+  --sidebar-text-muted: var(--ui-text-muted);
+  height: 100%;
+  font-size: 15px;
+}
+.notion-sidebar-workspace { height: 48px; flex-basis: 48px; padding: 0 13px; }
+.notion-sidebar-workspace strong { color: var(--sidebar-text-muted); font-size: 14px; font-weight: 400; }
+.notion-sidebar-shortcuts { border-bottom: 0; padding: 0 3px 16px; }
+.notion-sidebar-shortcut,
+.notion-sidebar-search { height: 38px; border-radius: 8px; font-size: 15px; }
+.notion-sidebar-shortcut { justify-content: flex-start; gap: 10px; color: var(--sidebar-text-muted); }
+.notion-sidebar-shortcut > svg { flex-shrink: 0; color: #c6c8ce; }
+.notion-sidebar-search { background: var(--workspace-canvas); border-color: var(--sidebar-border); }
+.notion-sidebar-pages-header {
+  height: 36px; flex-basis: 36px; padding: 0 13px 7px;
+  font-family: inherit; font-size: 13px; font-weight: 400; letter-spacing: 0;
+}
+.notion-sidebar-pages-header button { opacity: 0; }
+.notion-sidebar-pages-header:hover button,
+.notion-sidebar-pages-header:focus-within button { opacity: 1; }
+.sidebar-page-row { height: 40px; margin: 2px 6px; border-radius: 8px; font-size: 15px; }
+.sidebar-page-row.is-selected {
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(20 20 24 / 12%), inset 0 0 0 1px rgb(20 20 24 / 4%);
+}
+.sidebar-page-main { padding-left: calc(4px + var(--page-depth) * 18px); gap: 6px; }
+.sidebar-page-leading { width: 10px; flex-basis: 10px; color: #c6c8ce; }
+.sidebar-page-dot { width: 10px; text-align: center; }
+.sidebar-page-content { max-width: calc(100% - 16px); }
+.sidebar-page-content.has-badge .sidebar-page-title { max-width: none; }
+.sidebar-page-add { opacity: 0; }
+.sidebar-page-row:focus-within .sidebar-page-add { opacity: 1; }
+.sidebar-page-add:hover { background: var(--sidebar-hover) !important; }
+.sidebar-page-badge.is-active,
+.sidebar-page-badge.is-review { color: var(--sidebar-text); background: var(--sidebar-hover); }
+.notion-sidebar-footer { border-top: 0; }
+.notion-sidebar-footer button { display: flex; align-items: center; gap: 10px; border-radius: 8px; }
+.notion-sidebar button:focus-visible,
+.notion-sidebar-search:focus-within { outline: 2px solid var(--ui-text-muted); outline-offset: -2px; }
+.workspace-dark .notion-sidebar { --sidebar-text: #a8abb3; }
+.preview-stage { background: var(--workspace-sidebar-bg, #f9f9fa); }
+.preview-paper { border-color: var(--workspace-border); }
+.preview-paper-mobile {
+  border: 6px solid #29292b;
+  border-radius: 32px;
+  box-shadow: 0 16px 48px rgb(20 20 24 / 12%);
+}
+.preview-paper-bar { background: var(--ui-surface) !important; }
+
+.preview-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+.preview-heading { flex: 0 1 auto; }
+.preview-toolbar .preview-actions { margin-left: auto; }
+.preview-toolbar .preview-pane-close { flex-shrink: 0; }
+.preview-theme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ui-border);
+}
+@container preview-pane (max-width: 760px) {
+  .preview-action-label { display: none; }
+  .preview-actions button { width: 36px; padding-left: 0; padding-right: 0; }
+}
+@container preview-pane (max-width: 560px) {
+  .preview-heading > span,
+  .preview-heading > div > div { display: none; }
+  .preview-toolbar { gap: 8px; }
+}
+@container preview-pane (max-width: 420px) {
+  .preview-toolbar .preview-heading { display: none; }
+  .preview-toolbar { gap: 6px; padding: 0 8px; }
+  .preview-toolbar .preview-actions { gap: 4px; }
+}
+
 @container preview-pane (max-width: 680px) {
   .preview-theme-description {
     display: none;
@@ -2900,12 +3022,6 @@ textarea:focus-visible {
 }
 
 @container preview-pane (max-width: 460px) {
-  .preview-toolbar {
-    gap: 8px;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
   .preview-stage {
     padding: 12px;
   }
@@ -3227,4 +3343,26 @@ textarea:focus-visible {
   .ui-toast {
     transition-property: opacity;
   }
+}
+
+/* Non-modal settings popover, anchored below the preview toolbar. */
+.preview-pane { position: relative; }
+.preview-settings-popover {
+  position: absolute;
+  top: 64px;
+  right: 10px;
+  z-index: 40;
+  width: min(440px, calc(100% - 20px));
+  height: min(600px, calc(100% - 76px));
+  min-height: 0;
+  border-radius: 14px;
+  outline: none;
+  box-shadow: 0 18px 50px rgb(20 20 24 / 18%), 0 3px 10px rgb(20 20 24 / 8%);
+}
+.preview-settings-popover > .visual-theme-editor {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  box-shadow: none;
 }

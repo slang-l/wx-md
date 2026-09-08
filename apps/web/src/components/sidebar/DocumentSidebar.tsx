@@ -1,3 +1,4 @@
+import { Plus, Search, Settings } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDocsStore } from '../../store/docsStore';
 import type { AppDoc } from '../../types/document';
@@ -92,8 +93,7 @@ export function DocumentSidebar({
   return (
     <aside className="notion-sidebar" aria-label="Workspace navigation">
       <header className="notion-sidebar-workspace">
-        <span className="notion-sidebar-logo" aria-hidden="true">W</span>
-        <strong>workspace</strong>
+        <strong>工作区</strong>
       </header>
 
       <section className="notion-sidebar-shortcuts" aria-label="Workspace shortcuts">
@@ -103,8 +103,8 @@ export function DocumentSidebar({
               ref={searchInputRef}
               type="search"
               value={query}
-              placeholder="Search pages"
-              aria-label="Search pages"
+              placeholder="搜索页面"
+              aria-label="搜索页面"
               autoFocus
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {
@@ -114,15 +114,14 @@ export function DocumentSidebar({
             <button type="button" aria-label="Close search" onClick={closeSearch}>×</button>
           </label>
         ) : (
-          <ShortcutButton label="Search" shortcut="⌘K" onClick={openSearch} />
+          <ShortcutButton label="搜索" icon={Search} onClick={openSearch} />
         )}
-        <ShortcutButton label="New page" shortcut="⌘N" onClick={handleCreateTopLevelPage} />
-        <ShortcutButton label="Inbox" onClick={openInbox} />
+        <ShortcutButton label="新建页面" icon={Plus} onClick={handleCreateTopLevelPage} />
       </section>
 
       <section className="notion-sidebar-pages" aria-label="Page navigation">
         <header className="notion-sidebar-pages-header">
-          <span>PAGES</span>
+          <span>页面</span>
           <button type="button" aria-label="Add page" title="Add page" onClick={handleCreateTopLevelPage}>+</button>
         </header>
 
@@ -138,8 +137,8 @@ export function DocumentSidebar({
       </section>
 
       <footer className="notion-sidebar-footer">
-        <button type="button" onClick={() => setSelectedId('trash')}>Trash</button>
-        <button type="button" onClick={onOpenSettings}>Settings</button>
+        <button type="button" onClick={openInbox}>最近编辑</button>
+        <button type="button" onClick={onOpenSettings}><Settings size={14} aria-hidden="true" />设置</button>
       </footer>
     </aside>
   );
@@ -147,17 +146,17 @@ export function DocumentSidebar({
 
 function ShortcutButton({
   label,
-  shortcut,
+  icon: Icon,
   onClick,
 }: {
   label: string;
-  shortcut?: string;
+  icon: typeof Search;
   onClick: () => void;
 }) {
   return (
     <button className="notion-sidebar-shortcut" type="button" onClick={onClick}>
+      <Icon size={13} strokeWidth={1.6} aria-hidden="true" />
       <span>{label}</span>
-      {shortcut ? <kbd>{shortcut}</kbd> : null}
     </button>
   );
 }
