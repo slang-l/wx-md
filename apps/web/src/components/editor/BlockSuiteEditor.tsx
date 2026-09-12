@@ -22,15 +22,39 @@ interface BlockSuiteEditorProps {
   blocks: NormalizedBlock[];
   onBlocksChange: (blocks: NormalizedBlock[]) => void;
   onTitleChange: (title: string) => void;
+  onToolbarStateChange: (state: EditorToolbarState) => void;
 }
 
 export interface BlockSuiteEditorHandle {
   insertBlocks: (blocks: NormalizedBlock[]) => boolean;
+  runAction: (action: EditorAction) => void;
+}
+
+export type EditorAction = 'undo' | 'redo' | 'bold' | 'italic' | 'underline' | 'strike' | 'code' | 'link' | 'text' | 'heading' | 'quote' | 'bulleted' | 'numbered' | 'todo';
+export type EditorToolbarState = Partial<Record<EditorAction, boolean>>;
+
+function readToolbarState(editor: AffineEditorContainer): EditorToolbarState {
+  const state: EditorToolbarState = {};
+  for (const key of ['bold', 'italic', 'underline', 'strike', 'code', 'link'] as const) {
+    // Use the same mixed-selection rules as the native floating format bar.
+    const [active] = editor.host.std.command.chain().isTextStyleActive({ key }).run();
+    state[key] = active;
+  }
+  const [, context] = editor.host.std.command.chain()
+    .getSelectedModels({ types: ['text', 'block'] }).run();
+  const models = context.selectedModels ?? [];
+  for (const key of ['text', 'heading', 'quote', 'bulleted', 'numbered', 'todo'] as const) {
+    const flavour = ['bulleted', 'numbered', 'todo'].includes(key) ? 'affine:list' : 'affine:paragraph';
+    state[key] = models.length > 0 && models.every((model) =>
+      model.flavour === flavour && 'type' in model && model.type === (key === 'heading' ? 'h2' : key),
+    );
+  }
+  return state;
 }
 
 export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEditorProps>(
   function BlockSuiteEditor(
-    { author, docId, title, updatedAt, blocks, onBlocksChange, onTitleChange },
+    { author, docId, title, updatedAt, blocks, onBlocksChange, onTitleChange, onToolbarStateChange },
     ref,
   ) {
     const hostRef = useRef<HTMLDivElement>(null);
@@ -38,13 +62,41 @@ export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEdi
     const editorRef = useRef<AffineEditorContainer | null>(null);
     const blocksChangeRef = useRef(onBlocksChange);
     const titleChangeRef = useRef(onTitleChange);
+    const toolbarChangeRef = useRef(onToolbarStateChange);
+    const refreshToolbarRef = useRef(() => {});
 
     blocksChangeRef.current = onBlocksChange;
     titleChangeRef.current = onTitleChange;
+    toolbarChangeRef.current = onToolbarStateChange;
 
     useImperativeHandle(
       ref,
       () => ({
+        runAction(action) {
+          const editor = editorRef.current;
+          if (!editor) return;
+          const chain = editor.host.std.command.chain();
+          try {
+            switch (action) {
+              case 'undo': editor.doc.undo(); return;
+              case 'redo': editor.doc.redo(); return;
+              case 'bold': chain.toggleBold().run(); return;
+              case 'italic': chain.toggleItalic().run(); return;
+              case 'underline': chain.toggleUnderline().run(); return;
+              case 'strike': chain.toggleStrike().run(); return;
+              case 'code': chain.toggleCode().run(); return;
+              case 'link': chain.toggleLink().run(); return;
+              default:
+                const nextAction = readToolbarState(editor)[action] ? 'text' : action;
+                chain.updateBlockType({
+                  flavour: ['bulleted', 'numbered', 'todo'].includes(nextAction) ? 'affine:list' : 'affine:paragraph',
+                  props: { type: nextAction === 'heading' ? 'h2' : nextAction },
+                }).run();
+            }
+          } finally {
+            refreshToolbarRef.current();
+          }
+        },
         insertBlocks(nextBlocks) {
           const bridge = bridgeRef.current;
           const editor = editorRef.current;
@@ -71,6 +123,21 @@ export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEdi
       let blocksRevision = 0;
       let blocksTimer: number | undefined;
       let titleTimer: number | undefined;
+      let toolbarFrame = 0;
+      let selectionDisposable: { dispose: () => void } | undefined;
+      let editorReady = false;
+      toolbarChangeRef.current({});
+      const syncToolbar = () => {
+        if (!editorReady || disposed) return;
+        window.cancelAnimationFrame(toolbarFrame);
+        toolbarFrame = window.requestAnimationFrame(() => {
+          if (disposed) return;
+          toolbarChangeRef.current(readToolbarState(editor));
+          // Native buttons also need a refresh when the fixed toolbar changes formatting.
+          editor.querySelector('affine-format-bar-widget')?.requestUpdate();
+        });
+      };
+      refreshToolbarRef.current = syncToolbar;
       const commitBlocks = blocksChangeRef.current;
       const commitTitle = titleChangeRef.current;
 
@@ -89,6 +156,7 @@ export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEdi
       editorRef.current = editor;
 
       const blockDisposable = bridge.doc.slots.blockUpdated.on(() => {
+        syncToolbar();
         window.clearTimeout(blocksTimer);
         const revision = ++blocksRevision;
         blocksTimer = window.setTimeout(() => {
@@ -111,6 +179,10 @@ export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEdi
         if (!disposed) {
           configureEditor(editor);
           updateDocumentMetadata(editor, author, updatedAt);
+          editorReady = true;
+          selectionDisposable = editor.host.selection.slots.changed.on(syncToolbar);
+          document.addEventListener('selectionchange', syncToolbar);
+          syncToolbar();
         }
       });
 
@@ -118,6 +190,10 @@ export const BlockSuiteEditor = forwardRef<BlockSuiteEditorHandle, BlockSuiteEdi
         const shouldFlushBlocks = blocksTimer !== undefined;
         const shouldFlushTitle = titleTimer !== undefined;
         disposed = true;
+        refreshToolbarRef.current = () => {};
+        window.cancelAnimationFrame(toolbarFrame);
+        selectionDisposable?.dispose();
+        document.removeEventListener('selectionchange', syncToolbar);
         window.clearTimeout(blocksTimer);
         window.clearTimeout(titleTimer);
 

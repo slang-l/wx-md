@@ -1,5 +1,5 @@
-import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, FileText, Folder } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { filterPageTree, type PageNode } from './page-tree-data';
 
 interface PageTreeProps {
@@ -16,6 +16,11 @@ export function PageTree({ nodes, query, selectedId, onAddChild, onSelect }: Pag
   );
   const visibleNodes = filterPageTree(nodes, query);
   const forceExpanded = query.trim().length > 0;
+  const ancestorKey = JSON.stringify(findAncestors(nodes, selectedId) ?? []);
+  useEffect(() => {
+    const ancestors = JSON.parse(ancestorKey) as string[];
+    if (ancestors.length) setExpandedIds((current) => new Set([...current, ...ancestors]));
+  }, [ancestorKey]);
 
   const toggleNode = (node: PageNode) => {
     if (!node.children?.length) return;
@@ -32,7 +37,7 @@ export function PageTree({ nodes, query, selectedId, onAddChild, onSelect }: Pag
   }
 
   return (
-    <div className="sidebar-page-tree" role="tree" aria-label="Pages">
+    <div className="sidebar-page-tree" role="tree" aria-label="页面列表">
       {visibleNodes.map((node) => (
         <PageTreeNode
           key={node.id}
@@ -51,6 +56,15 @@ export function PageTree({ nodes, query, selectedId, onAddChild, onSelect }: Pag
       ))}
     </div>
   );
+}
+
+function findAncestors(nodes: PageNode[], id: string): string[] | null {
+  for (const node of nodes) {
+    if (node.id === id) return [];
+    const childPath = findAncestors(node.children, id);
+    if (childPath) return [node.id, ...childPath];
+  }
+  return null;
 }
 
 interface PageTreeNodeProps {
@@ -87,12 +101,21 @@ function PageTreeNode({
         aria-current={selected ? 'page' : undefined}
         aria-expanded={hasChildren ? expanded : undefined}
       >
+        {hasChildren && (
+          <button
+            type="button"
+            className="automatic-tree-toggle"
+            aria-label={`${expanded ? '折叠' : '展开'}${node.title}`}
+            onClick={() => onToggle(node)}
+          >
+            <ChevronDown size={12} style={{ transform: expanded ? undefined : 'rotate(-90deg)' }} />
+          </button>
+        )}
         <button
           className="sidebar-page-main"
           type="button"
           onClick={() => {
             onSelect(node);
-            onToggle(node);
           }}
         >
           <span className="sidebar-page-leading" aria-hidden="true">
@@ -102,26 +125,26 @@ function PageTreeNode({
               <span className="sidebar-page-dot">·</span>
             )}
           </span>
+          {hasChildren ? (
+            <Folder size={17} strokeWidth={1.4} />
+          ) : (
+            <FileText size={15} strokeWidth={1.3} />
+          )}
           <span className={`sidebar-page-content ${node.status ? 'has-badge' : ''}`}>
             <span className="sidebar-page-title" title={node.title}>
               {node.title}
             </span>
-            {node.status ? (
-              <span className={`sidebar-page-badge is-${node.status}`}>{node.status}</span>
-            ) : null}
           </span>
         </button>
-        {depth === 0 ? (
-          <button
-            className="sidebar-page-add"
-            type="button"
-            aria-label={`Add a page inside ${node.title}`}
-            title={`Add inside ${node.title}`}
-            onClick={() => onAddChild(node)}
-          >
-            +
-          </button>
-        ) : null}
+        <button
+          className="sidebar-page-add"
+          type="button"
+          aria-label={`在${node.title}中新建子页面`}
+          title={`在${node.title}中新建子页面`}
+          onClick={() => onAddChild(node)}
+        >
+          +
+        </button>
       </div>
 
       {expanded ? (

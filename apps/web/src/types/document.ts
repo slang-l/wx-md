@@ -41,6 +41,7 @@ export interface NormalizedBlock {
 }
 
 export interface AppDoc {
+  deletedAt?: string;
   id: string;
   title: string;
   blocks: NormalizedBlock[];

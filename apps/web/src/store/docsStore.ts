@@ -12,7 +12,16 @@ let activeDocsOwnerId: string | null = null;
 let activeDocsOwnerLoaded = false;
 let docsHydrationPromise: Promise<void> | null = null;
 
+export function getDocsOwnerId() {
+  return activeDocsOwnerId;
+}
+
 interface DocsState {
+  publishRecords: PublishRecord[];
+  savePublishRecord: (record: PublishRecord, ownerId?: string | null) => void;
+  restoreDoc: (id: string) => void;
+  permanentlyDeleteDoc: (id: string) => void;
+  moveDoc: (id: string, parentId: string | null) => void;
   docs: AppDoc[];
   currentDocId: string;
   createDoc: (parentId?: string) => string;
@@ -20,6 +29,31 @@ interface DocsState {
   setCurrentDocId: (id: string) => void;
   renameDoc: (id: string, title: string) => void;
   updateDocBlocks: (id: string, blocks: NormalizedBlock[]) => void;
+}
+
+export interface PublishRecord {
+  publishId: string;
+  docId: string;
+  title: string;
+  submittedAt: string;
+  state: 'publishing' | 'published' | 'failed';
+  articleUrl?: string | null;
+  message?: string;
+}
+
+export function descendantIds(docs: AppDoc[], id: string): Set<string> {
+  const ids = new Set([id]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const doc of docs) {
+      if (doc.parentId && ids.has(doc.parentId) && !ids.has(doc.id)) {
+        ids.add(doc.id);
+        changed = true;
+      }
+    }
+  }
+  return ids;
 }
 
 function touchDoc(doc: AppDoc, patch: Partial<AppDoc>): AppDoc {
@@ -33,6 +67,52 @@ function touchDoc(doc: AppDoc, patch: Partial<AppDoc>): AppDoc {
 export const useDocsStore = create<DocsState>()(
   persist(
     (set, get) => ({
+      publishRecords: [],
+      savePublishRecord: (record, ownerId) => {
+        if (ownerId !== undefined && ownerId !== activeDocsOwnerId) return;
+        set((state) => ({
+          publishRecords: [
+            record,
+            ...state.publishRecords.filter((item) => item.publishId !== record.publishId),
+          ],
+        }));
+      },
+      moveDoc: (id, parentId) => {
+        const docs = get().docs;
+        if (
+          parentId &&
+          (!docs.some((doc) => doc.id === parentId && !doc.deletedAt) ||
+            descendantIds(docs, id).has(parentId))
+        )
+          return;
+        set({ docs: docs.map((doc) => (doc.id === id ? touchDoc(doc, { parentId }) : doc)) });
+      },
+      restoreDoc: (id) => {
+        const docs = get().docs;
+        const ids = descendantIds(docs, id);
+        set({
+          docs: docs.map((doc) =>
+            ids.has(doc.id)
+              ? {
+                  ...doc,
+                  deletedAt: undefined,
+                  parentId:
+                    doc.parentId &&
+                    !ids.has(doc.parentId) &&
+                    !docs.some((parent) => parent.id === doc.parentId && !parent.deletedAt)
+                      ? null
+                      : doc.parentId,
+                }
+              : doc,
+          ),
+        });
+      },
+      permanentlyDeleteDoc: (id) => {
+        const docs = get().docs;
+        if (!docs.find((doc) => doc.id === id)?.deletedAt) return;
+        const ids = descendantIds(docs, id);
+        set({ docs: docs.filter((doc) => !ids.has(doc.id) || !doc.deletedAt) });
+      },
       docs: mockDocs,
       currentDocId: mockDocs[0].id,
       createDoc: (parentId) => {
@@ -45,17 +125,24 @@ export const useDocsStore = create<DocsState>()(
       },
       deleteDoc: (id) => {
         const state = get();
-        if (state.docs.length <= 1) return;
-
-        const nextDocs = state.docs.filter((doc) => doc.id !== id);
-        const deletedCurrent = state.currentDocId === id;
+        if (!state.docs.some((doc) => doc.id === id && !doc.deletedAt)) return;
+        const ids = descendantIds(state.docs, id);
+        const nextDocs = state.docs.map((doc) =>
+          ids.has(doc.id) ? { ...doc, deletedAt: nowIso() } : doc,
+        );
+        let nextActive = nextDocs.find((doc) => !doc.deletedAt);
+        if (!nextActive) {
+          nextActive = createStarterDoc();
+          nextDocs.unshift(nextActive);
+        }
+        const deletedCurrent = ids.has(state.currentDocId);
         set({
           docs: nextDocs,
-          currentDocId: deletedCurrent ? nextDocs[0].id : state.currentDocId,
+          currentDocId: deletedCurrent ? nextActive.id : state.currentDocId,
         });
       },
       setCurrentDocId: (id) => {
-        if (get().docs.some((doc) => doc.id === id)) {
+        if (get().docs.some((doc) => doc.id === id && !doc.deletedAt)) {
           set({ currentDocId: id });
         }
       },
@@ -91,7 +178,13 @@ export const useDocsStore = create<DocsState>()(
       name: LEGACY_DOCS_STORAGE_KEY,
       version: 1,
       skipHydration: true,
+      merge: (persisted, current) => ({
+        ...current,
+        publishRecords: [],
+        ...(persisted as Partial<DocsState>),
+      }),
       partialize: (state) => ({
+        publishRecords: state.publishRecords,
         docs: state.docs,
         currentDocId: state.currentDocId,
       }),
@@ -130,6 +223,7 @@ export function loadDocsForUser(userId: string): Promise<void> {
 
   if (window.localStorage.getItem(storageKey) === null) {
     useDocsStore.setState({
+      publishRecords: [],
       docs: mockDocs,
       currentDocId: mockDocs[0].id,
     });
@@ -158,5 +252,5 @@ export function clearDocsFromMemory(): void {
   activeDocsOwnerId = null;
   activeDocsOwnerLoaded = false;
   useDocsStore.persist.setOptions({ name: EMPTY_DOCS_STORAGE_KEY });
-  useDocsStore.setState({ docs: [], currentDocId: '' });
+  useDocsStore.setState({ docs: [], currentDocId: '', publishRecords: [] });
 }

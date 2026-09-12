@@ -58,7 +58,8 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  font-synthesis: none;
+  /* CJK fonts often lack italic faces; allow slant synthesis for rich text. */
+  font-synthesis: style;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -559,6 +560,82 @@ textarea:focus-visible {
   display: none;
 }
 
+.editor-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editor-column > .blocksuite-editor-host {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex: 0 0 50px;
+  gap: 8px;
+  padding: 0 14px;
+  overflow-x: auto;
+  background: var(--workspace-canvas);
+  border-bottom: 1px solid var(--workspace-border);
+  scrollbar-width: thin;
+}
+
+.editor-toolbar-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.editor-toolbar-group + .editor-toolbar-group {
+  border-left: 1px solid var(--workspace-border);
+  padding-left: 8px;
+}
+
+.editor-toolbar button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.editor-toolbar button:hover {
+  color: var(--ui-text);
+  background: var(--workspace-hover);
+}
+
+.editor-toolbar button[aria-pressed='true'] {
+  color: var(--affine-primary-color, var(--ui-primary));
+  background: var(--affine-hover-color, var(--workspace-hover));
+}
+
+.editor-toolbar button:focus-visible {
+  outline: 2px solid var(--ui-text-muted);
+  outline-offset: -2px;
+}
+
+.workspace-topbar .workspace-actions > button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: 6px;
+}
+
 .editor-column,
 .blocksuite-editor-host {
   height: 100%;
@@ -691,11 +768,17 @@ textarea:focus-visible {
 
 .affine-editor-container .affine-paragraph-rich-text-wrapper.quote {
   margin: 8px 0;
-  border-left: 3px solid var(--ui-primary);
-  border-radius: 0 var(--ui-radius-surface) var(--ui-radius-surface) 0;
-  background: var(--ui-primary-soft);
-  padding: 14px 18px;
+  border-left: 3px solid var(--ui-border-strong);
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 0 4px 16px;
   color: var(--ui-text-secondary);
+  line-height: var(--affine-line-height);
+}
+
+/* The native quote marker would duplicate the border above. */
+.affine-editor-container .affine-paragraph-rich-text-wrapper.quote::after {
+  content: none;
 }
 
 .affine-editor-container affine-code .affine-block-component {
@@ -2955,7 +3038,7 @@ textarea:focus-visible {
   --workspace-sidebar-bg: #f9f9fa;
   --workspace-hover: #f0f0f2;
   --workspace-active: #ffffff;
-  padding-top: 52px;
+  padding-top: 0;
 }
 .workspace-shell.workspace-dark {
   --workspace-sidebar-bg: #202124;
@@ -2967,9 +3050,9 @@ textarea:focus-visible {
   --ui-primary-border: #414249;
 }
 .workspace-topbar {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 52px;
+  position: relative;
+  height: 60px;
+  flex: 0 0 60px;
   background: var(--workspace-canvas);
   padding: 0 14px;
 }

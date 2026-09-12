@@ -1,178 +1,161 @@
-import { Plus, Search, Settings } from 'lucide-react';
+import {
+  FileText,
+  Home,
+  Image,
+  PanelsTopLeft,
+  Plus,
+  Search,
+  Send,
+  Settings,
+  Trash2,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDocsStore } from '../../store/docsStore';
 import type { AppDoc } from '../../types/document';
 import { PageTree } from './PageTree';
-import { buildPageTree, type PageNode } from './page-tree-data';
-
-interface DocumentSidebarProps {
+import { buildPageTree } from './page-tree-data';
+export type WorkspaceView = 'editor' | 'home' | 'start' | 'templates' | 'history' | 'trash' | 'pro';
+export const viewLabels: Record<WorkspaceView, string> = {
+  editor: '文章创作',
+  home: '首页',
+  start: '快速开始',
+  templates: '模板中心',
+  history: '发布记录',
+  trash: '回收站',
+  pro: '版本与空间',
+};
+interface Props {
   docs: AppDoc[];
   currentDocId: string;
-  onDocumentOpen?: () => void;
+  view: WorkspaceView;
+  onNavigate: (view: WorkspaceView) => void;
+  onDocumentOpen: () => void;
   onOpenSettings: () => void;
+  onOpenAssets: () => void;
+  onSearchOpen: () => void;
+  assetsOpen: boolean;
 }
-
 export function DocumentSidebar({
   docs,
   currentDocId,
+  view,
+  onNavigate,
   onDocumentOpen,
   onOpenSettings,
-}: DocumentSidebarProps) {
-  const createDoc = useDocsStore((state) => state.createDoc);
-  const setCurrentDocId = useDocsStore((state) => state.setCurrentDocId);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const pageTree = useMemo(() => buildPageTree(docs), [docs]);
-  const [selectedId, setSelectedId] = useState(currentDocId);
+  onOpenAssets,
+  onSearchOpen,
+  assetsOpen,
+}: Props) {
+  const store = useDocsStore();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
-
+  const tree = useMemo(() => buildPageTree(docs), [docs]);
+  const create = (parentId?: string) => {
+    store.createDoc(parentId);
+    setQuery('');
+    onDocumentOpen();
+  };
   useEffect(() => {
-    setSelectedId(currentDocId);
-  }, [currentDocId]);
-
-  useEffect(() => {
-    const handleShortcut = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey)) return;
-      const key = event.key.toLocaleLowerCase();
-
-      if (key === 'k') {
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setSearchOpen(true);
-        window.setTimeout(() => searchInputRef.current?.focus(), 0);
-      }
-
-      if (key === 'n') {
-        event.preventDefault();
-        handleCreateTopLevelPage();
+        onSearchOpen();
+        window.requestAnimationFrame(() => {
+          searchRef.current?.focus();
+          searchRef.current?.select();
+        });
       }
     };
-
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
-  });
-
-  const handleCreateTopLevelPage = () => {
-    const documentId = createDoc();
-    setSelectedId(documentId);
-    setQuery('');
-    onDocumentOpen?.();
-  };
-
-  const handleAddChild = (parent: PageNode) => {
-    const documentId = createDoc(parent.id);
-    setSelectedId(documentId);
-    setQuery('');
-    onDocumentOpen?.();
-  };
-
-  const handleSelectPage = (node: PageNode) => {
-    setSelectedId(node.id);
-    setCurrentDocId(node.id);
-    onDocumentOpen?.();
-  };
-
-  const openSearch = () => {
-    setSearchOpen(true);
-    window.setTimeout(() => searchInputRef.current?.focus(), 0);
-  };
-
-  const closeSearch = () => {
-    setQuery('');
-    setSearchOpen(false);
-  };
-
-  const openInbox = () => {
-    const newestDoc = [...docs].sort((left, right) =>
-      right.updatedAt.localeCompare(left.updatedAt),
-    )[0];
-    if (!newestDoc) return;
-
-    setCurrentDocId(newestDoc.id);
-    setSelectedId(newestDoc.id);
-    onDocumentOpen?.();
-  };
-
+    window.addEventListener('keydown', shortcut);
+    return () => window.removeEventListener('keydown', shortcut);
+  }, [onSearchOpen]);
+  const nav = (id: WorkspaceView, Icon: typeof Home) => (
+    <button
+      type="button"
+      className={'automatic-nav ' + (view === id && !assetsOpen ? 'is-active' : '')}
+      aria-current={view === id && !assetsOpen ? 'page' : undefined}
+      onClick={() => onNavigate(id)}
+    >
+      <Icon size={18} strokeWidth={1.5} />
+      <span>{viewLabels[id]}</span>
+    </button>
+  );
   return (
-    <aside className="notion-sidebar" aria-label="Workspace navigation">
-      <header className="notion-sidebar-workspace">
-        <strong>工作区</strong>
+    <aside className="notion-sidebar automatic-sidebar" aria-label="工作区导航">
+      <header className="automatic-brand">
+        <span className="automatic-logo">N</span>
+        <strong>AutoMatic</strong>
+        <span className="automatic-beta">测试版</span>
       </header>
-
-      <section className="notion-sidebar-shortcuts" aria-label="Workspace shortcuts">
-        {searchOpen ? (
-          <label className="notion-sidebar-search">
-            <input
-              ref={searchInputRef}
-              type="search"
-              value={query}
-              placeholder="搜索页面"
-              aria-label="搜索页面"
-              autoFocus
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') closeSearch();
-              }}
-            />
-            <button type="button" aria-label="Close search" onClick={closeSearch}>
-              ×
-            </button>
-          </label>
-        ) : (
-          <ShortcutButton label="搜索" icon={Search} onClick={openSearch} />
-        )}
-        <ShortcutButton label="新建页面" icon={Plus} onClick={handleCreateTopLevelPage} />
-      </section>
-
-      <section className="notion-sidebar-pages" aria-label="Page navigation">
+      <label className="automatic-search">
+        <Search size={15} />
+        <input
+          ref={searchRef}
+          type="search"
+          placeholder="搜索文档..."
+          aria-label="搜索文档"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setQuery('');
+          }}
+        />
+        <kbd>{navigator.platform.includes('Mac') ? '⌘K' : 'Ctrl K'}</kbd>
+      </label>
+      <nav className="automatic-nav-group" aria-label="开始">
+        {nav('home', Home)}
+        {nav('start', Zap)}
+      </nav>
+      <nav className="automatic-nav-group" aria-label="我的空间">
+        <h2>我的空间</h2>
+        {nav('editor', FileText)}
+        <button
+          type="button"
+          className={'automatic-nav ' + (assetsOpen ? 'is-active' : '')}
+          aria-current={assetsOpen ? 'page' : undefined}
+          onClick={onOpenAssets}
+        >
+          <Image size={18} strokeWidth={1.5} />
+          <span>素材库</span>
+        </button>
+        {nav('templates', PanelsTopLeft)}
+        {nav('history', Send)}
+        {nav('trash', Trash2)}
+      </nav>
+      <section className="notion-sidebar-pages">
         <header className="notion-sidebar-pages-header">
-          <span>页面</span>
-          <button
-            type="button"
-            aria-label="Add page"
-            title="Add page"
-            onClick={handleCreateTopLevelPage}
-          >
-            +
+          <span>工作区</span>
+          <button type="button" aria-label="新建文章" title="新建文章" onClick={() => create()}>
+            <Plus size={16} />
           </button>
         </header>
-
         <div className="notion-sidebar-tree-scroll">
           <PageTree
-            nodes={pageTree}
+            nodes={tree}
             query={query}
-            selectedId={selectedId}
-            onAddChild={handleAddChild}
-            onSelect={handleSelectPage}
+            selectedId={view === 'editor' ? currentDocId : ''}
+            onAddChild={(node) => create(node.id)}
+            onSelect={(node) => {
+              store.setCurrentDocId(node.id);
+              onDocumentOpen();
+            }}
           />
         </div>
       </section>
-
-      <footer className="notion-sidebar-footer">
-        <button type="button" onClick={openInbox}>
-          最近编辑
-        </button>
-        <button type="button" onClick={onOpenSettings}>
-          <Settings size={14} aria-hidden="true" />
+      {/* <footer className="automatic-footer">
+        <div className="automatic-upgrade">
+          <strong>升级到专业版</strong>
+          <p>解锁更多功能 · 更大的存储空间</p>
+          <button type="button" onClick={() => onNavigate('pro')}>
+            查看升级方案
+          </button>
+        </div>
+        <button className="automatic-settings" type="button" onClick={onOpenSettings}>
+          <Settings size={14} />
           设置
         </button>
-      </footer>
+      </footer> */}
     </aside>
-  );
-}
-
-function ShortcutButton({
-  label,
-  icon: Icon,
-  onClick,
-}: {
-  label: string;
-  icon: typeof Search;
-  onClick: () => void;
-}) {
-  return (
-    <button className="notion-sidebar-shortcut" type="button" onClick={onClick}>
-      <Icon size={13} strokeWidth={1.6} aria-hidden="true" />
-      <span>{label}</span>
-    </button>
   );
 }

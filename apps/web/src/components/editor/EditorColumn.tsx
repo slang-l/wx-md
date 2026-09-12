@@ -3,8 +3,9 @@ import { useDocsStore } from '../../store/docsStore';
 import type { AppDoc, NormalizedBlock } from '../../types/document';
 import { Toast, type ToastState } from '../common/Toast';
 import type { BrandAsset } from '../../services/brand-assets-api';
-import { BlockSuiteEditor, type BlockSuiteEditorHandle } from './BlockSuiteEditor';
+import { BlockSuiteEditor, type BlockSuiteEditorHandle, type EditorToolbarState } from './BlockSuiteEditor';
 import { BrandAssetLibrary } from './BrandAssetLibrary';
+import { EditorToolbar } from './EditorToolbar';
 import { ContentComponentLibrary } from './ContentComponentLibrary';
 import {
   createContentComponentBlocks,
@@ -30,6 +31,7 @@ export function EditorColumn({
   const updateDocBlocks = useDocsStore((state) => state.updateDocBlocks);
   const editorRef = useRef<BlockSuiteEditorHandle>(null);
   const [toast, setToast] = useState<ToastState>(null);
+  const [toolbarState, setToolbarState] = useState<EditorToolbarState>({});
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -84,6 +86,12 @@ export function EditorColumn({
   return (
     <section className="editor-column" aria-label="文档编辑区">
       <Toast toast={toast} />
+      <EditorToolbar
+        state={toolbarState}
+        onAction={(action) => editorRef.current?.runAction(action)}
+        onOpenAssets={() => onBrandAssetLibraryOpenChange(true)}
+        onOpenComponents={() => onComponentLibraryOpenChange(true)}
+      />
       <BlockSuiteEditor
         ref={editorRef}
         author={doc.author}
@@ -93,6 +101,7 @@ export function EditorColumn({
         updatedAt={doc.updatedAt}
         onBlocksChange={handleBlocksChange}
         onTitleChange={handleTitleChange}
+        onToolbarStateChange={setToolbarState}
       />
       <ContentComponentLibrary
         open={componentLibraryOpen}

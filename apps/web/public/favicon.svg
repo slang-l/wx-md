@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Transparent canvas; optimized for browser tabs / favicons -->
+  <rect x="5" y="5" width="54" height="54" rx="12" fill="#191919"/>
+
+  <!-- Chromatic edge effect from the reference image -->
+  <path d="M23 43V21L40 43V21"
+        fill="none" stroke="#1919A6" stroke-width="6"
+        stroke-linejoin="miter" stroke-linecap="butt"
+        transform="translate(-1.7 0)"/>
+  <path d="M23 43V21L40 43V21"
+        fill="none" stroke="#DAFFFF" stroke-width="6"
+        stroke-linejoin="miter" stroke-linecap="butt"
+        transform="translate(-0.9 0)"/>
+  <path d="M23 43V21L40 43V21"
+        fill="none" stroke="#811919" stroke-width="6"
+        stroke-linejoin="miter" stroke-linecap="butt"
+        transform="translate(1.7 0)"/>
+  <path d="M23 43V21L40 43V21"
+        fill="none" stroke="#FFF1C3" stroke-width="6"
+        stroke-linejoin="miter" stroke-linecap="butt"
+        transform="translate(0.9 0)"/>
+
+  <!-- Main white N -->
+  <path d="M23 43V21L40 43V21"
+        fill="none" stroke="#FFFFFF" stroke-width="6"
+        stroke-linejoin="miter" stroke-linecap="butt"/>
+</svg>

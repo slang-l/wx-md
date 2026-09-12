@@ -1,0 +1,408 @@
+.automatic-sidebar {
+  --sidebar-bg: #f7f7f5;
+  --sidebar-selected: #e9e9e7;
+  --sidebar-text: #808080;
+  --sidebar-text-strong: #191919;
+  background: var(--sidebar-bg);
+  padding: 10px 5px 0;
+}
+.automatic-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 5px;
+  flex-shrink: 0;
+  color: var(--sidebar-text-strong);
+}
+.automatic-brand strong {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+.automatic-logo {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  background: #191919;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+.automatic-beta {
+  margin-left: auto;
+  background: #dededb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: #777;
+}
+.automatic-search {
+  display: flex;
+  flex-shrink: 0;
+  gap: 7px;
+  align-items: center;
+  margin: 0 5px 10px;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: 9px;
+  background: var(--sidebar-selected);
+  color: #a0a0a0;
+}
+.automatic-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sidebar-text-strong);
+  font-size: 14px;
+}
+.automatic-search input::placeholder {
+  color: #aaa;
+}
+.automatic-search kbd {
+  font: inherit;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.automatic-nav-group {
+  padding: 3px 0 8px;
+  margin: 0 0 5px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+.automatic-nav-group h2 {
+  margin: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a0a0a0;
+}
+.automatic-sidebar .automatic-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 6px;
+  text-align: left;
+  font-size: 16px;
+}
+.automatic-sidebar .automatic-nav:hover {
+  background: var(--sidebar-hover);
+}
+.automatic-sidebar .automatic-nav.is-active {
+  background: var(--sidebar-selected);
+  color: var(--sidebar-text-strong);
+  font-weight: 600;
+}
+.automatic-sidebar .notion-sidebar-pages {
+  min-height: 95px;
+}
+.automatic-sidebar .notion-sidebar-pages-header {
+  padding: 0 12px;
+  height: 32px;
+  flex-basis: 32px;
+}
+.automatic-sidebar .notion-sidebar-pages-header button {
+  opacity: 0.65;
+}
+.automatic-sidebar .sidebar-page-row {
+  margin: 0;
+  width: 100%;
+  height: 35px;
+  border-radius: 5px;
+  font-size: 15px;
+}
+.automatic-sidebar .sidebar-page-row.is-selected {
+  box-shadow: none;
+  font-weight: 400;
+}
+.automatic-sidebar .sidebar-page-leading {
+  display: none;
+}
+.automatic-sidebar .sidebar-page-main {
+  padding-left: calc(30px + var(--page-depth) * 18px);
+  gap: 8px;
+}
+.automatic-sidebar .sidebar-page-main > svg {
+  flex-shrink: 0;
+}
+.automatic-sidebar .sidebar-page-row:has(.automatic-tree-toggle) {
+  color: var(--sidebar-text-strong) !important;
+}
+.automatic-tree-toggle {
+  position: absolute;
+  left: calc(9px + var(--page-depth) * 18px);
+  width: 20px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+.automatic-footer {
+  flex-shrink: 0;
+  padding: 12px 5px 6px;
+}
+.automatic-upgrade {
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text-strong);
+}
+.automatic-upgrade strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.automatic-upgrade p {
+  font-size: 13px;
+  color: var(--sidebar-text);
+  margin: 5px 0 14px;
+  line-height: 1.5;
+}
+.automatic-sidebar .automatic-upgrade button {
+  width: 100%;
+  border-radius: 8px;
+  background: #303030;
+  color: white;
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.automatic-sidebar .automatic-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 7px;
+  font-size: 12px;
+}
+.workspace-dark .automatic-sidebar {
+  --sidebar-bg: #202124;
+  --sidebar-selected: #353638;
+  --sidebar-text: #aaa;
+  --sidebar-text-strong: #eee;
+}
+.automatic-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 46px clamp(20px, 5vw, 80px);
+  color: var(--ui-text);
+}
+.automatic-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.automatic-panel h1 {
+  font-size: 30px;
+  font-weight: 650;
+  margin: 10px 0;
+}
+.automatic-panel h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 8px 0;
+}
+.automatic-eyebrow {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--ui-text-muted);
+}
+.automatic-description {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ui-text-secondary);
+  margin: 12px 0 28px;
+}
+.automatic-panel button,
+.automatic-panel a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+.automatic-panel button:hover {
+  background: var(--workspace-hover);
+}
+.automatic-panel button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.automatic-panel .automatic-primary {
+  background: var(--ui-primary);
+  color: white;
+  white-space: nowrap;
+}
+.automatic-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 25px 0 36px;
+}
+.automatic-stats > div {
+  padding: 22px;
+  border-radius: 10px;
+  background: var(--workspace-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.automatic-stats strong {
+  font-size: 28px;
+  font-weight: 500;
+}
+.automatic-stats span,
+.automatic-panel small {
+  color: var(--ui-text-muted);
+  font-size: 12px;
+}
+.automatic-section-title {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.automatic-panel input,
+.automatic-panel select {
+  min-width: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  padding: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.automatic-document-row,
+.automatic-record {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--ui-border);
+  padding: 18px 0;
+  flex-wrap: wrap;
+}
+.automatic-document-info,
+.automatic-record > div {
+  flex: 1;
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+.automatic-document-info small {
+  display: block;
+  margin-top: 6px;
+}
+.automatic-document-info > button {
+  border: 0;
+  padding: 0;
+  font-size: 15px;
+  text-align: left;
+}
+.automatic-document-row select {
+  max-width: 150px;
+}
+.automatic-document-info form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.automatic-guide,
+.automatic-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.automatic-guide article,
+.automatic-template,
+.automatic-plan {
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  padding: 24px;
+}
+.automatic-guide article > span {
+  color: var(--ui-text-muted);
+  font-size: 24px;
+}
+.automatic-guide p,
+.automatic-template p,
+.automatic-plan p {
+  color: var(--ui-text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.automatic-template-paper {
+  background: var(--workspace-sidebar-bg);
+  border-radius: 8px;
+  padding: 24px;
+  min-height: 220px;
+}
+.automatic-template-paper p {
+  border-bottom: 1px solid var(--ui-border);
+  padding-bottom: 7px;
+  font-size: 12px;
+}
+.automatic-template > button {
+  width: 100%;
+}
+.automatic-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--ui-text-muted);
+}
+.automatic-empty p {
+  font-size: 14px;
+}
+.automatic-plan {
+  margin-top: 24px;
+  max-width: 680px;
+}
+.automatic-panel :is(button, a, input, select):focus-visible,
+.automatic-search:focus-within {
+  outline: 2px solid var(--ui-text-muted);
+  outline-offset: 2px;
+}
+@media (max-height: 740px) {
+  .automatic-sidebar {
+    overflow-y: auto;
+  }
+  .automatic-sidebar .notion-sidebar-pages {
+    flex: 1 0 110px;
+  }
+  .automatic-upgrade {
+    padding: 10px 14px;
+  }
+  .automatic-upgrade p {
+    margin-bottom: 6px;
+  }
+}
+@media (max-width: 760px) {
+  .automatic-panel {
+    padding: 25px 18px;
+  }
+  .automatic-stats {
+    gap: 7px;
+  }
+  .automatic-stats > div {
+    padding: 15px;
+  }
+  .automatic-section-title {
+    flex-wrap: wrap;
+  }
+}

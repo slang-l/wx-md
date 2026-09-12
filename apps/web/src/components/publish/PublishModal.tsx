@@ -1,3 +1,4 @@
+import { getDocsOwnerId, useDocsStore } from '../../store/docsStore';
 import {
   CheckCircle2,
   Copy,
@@ -47,6 +48,7 @@ type BusyAction =
   'loading' | 'saving-config' | 'deleting-config' | 'preparing' | 'publishing' | null;
 
 export function PublishModal({ content, doc, open, onClose, onCopyLink }: PublishModalProps) {
+  const docsOwnerId = getDocsOwnerId();
   const [config, setConfig] = useState<WechatConfig | null>(null);
   const [editingConfig, setEditingConfig] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
@@ -137,6 +139,19 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
         const nextStatus = await getWechatPublishStatus(submission.publishId);
         if (cancelled) return;
         setPublishStatus(nextStatus);
+        const record = useDocsStore
+          .getState()
+          .publishRecords.find((item) => item.publishId === nextStatus.publishId);
+        if (record)
+          useDocsStore.getState().savePublishRecord(
+            {
+              ...record,
+              state: nextStatus.state,
+              articleUrl: nextStatus.articleUrl,
+              message: nextStatus.message,
+            },
+            docsOwnerId,
+          );
         setErrorMessage('');
         if (nextStatus.state === 'publishing') {
           timer = window.setTimeout(poll, 2_500);
@@ -251,6 +266,16 @@ export function PublishModal({ content, doc, open, onClose, onCopyLink }: Publis
         onlyFansCanComment: needOpenComment && onlyFansCanComment,
       });
       setSubmission(nextSubmission);
+      useDocsStore.getState().savePublishRecord(
+        {
+          publishId: nextSubmission.publishId,
+          docId: doc.id,
+          title,
+          submittedAt: nextSubmission.submittedAt,
+          state: 'publishing',
+        },
+        docsOwnerId,
+      );
       setPublishStatus({
         publishId: nextSubmission.publishId,
         state: 'publishing',
