@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { SettingsPreferences, SettingsUser } from './types';
 
-const STORAGE_PREFIX = 'wx-md:settings:v1:';
+const STORAGE_PREFIX = 'automatic:settings:v1:';
 
 export const DEFAULT_SETTINGS_PREFERENCES: Readonly<SettingsPreferences> = {
   version: 1,
@@ -120,7 +120,7 @@ export function downloadSettingsJson(user: SettingsUser, preferences: SettingsPr
   if (typeof document === 'undefined') return;
 
   const payload = {
-    format: 'wx-md-settings',
+    format: 'automatic-settings',
     version: 1,
     exportedAt: new Date().toISOString(),
     ...(preferences.privacy.includeAccountInExport
@@ -132,7 +132,7 @@ export function downloadSettingsJson(user: SettingsUser, preferences: SettingsPr
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `wx-md-settings-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.download = `automatic-settings-${new Date().toISOString().slice(0, 10)}.json`;
   anchor.style.display = 'none';
   document.body.appendChild(anchor);
   anchor.click();

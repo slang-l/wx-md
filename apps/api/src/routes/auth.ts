@@ -7,7 +7,7 @@ import type { AppConfig } from '../config.js';
 import { AppError } from '../errors.js';
 import type { AuthService, SessionMetadata } from '../services/auth.service.js';
 
-export const REFRESH_COOKIE_NAME = 'wxmd_refresh_token';
+export const REFRESH_COOKIE_NAME = 'automatic_refresh_token';
 
 const emailSchema = z
   .string()

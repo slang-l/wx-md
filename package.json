@@ -1,5 +1,5 @@
 {
-  "name": "wx-md",
+  "name": "automatic",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@9.15.4",
@@ -7,12 +7,12 @@
     "node": "^20.12.0 || >=22.0.0"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @wx-md/web --filter @wx-md/api dev",
-    "dev:web": "pnpm --filter @wx-md/web dev",
-    "dev:api": "pnpm --filter @wx-md/api dev",
+    "dev": "pnpm --parallel --filter @automatic/web --filter @automatic/api dev",
+    "dev:web": "pnpm --filter @automatic/web dev",
+    "dev:api": "pnpm --filter @automatic/api dev",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter @wx-md/api db:migrate",
+    "db:migrate": "pnpm --filter @automatic/api db:migrate",
     "build": "pnpm --filter \"./apps/**\" --if-present build",
     "typecheck": "pnpm --filter \"./apps/**\" --if-present typecheck",
     "test": "pnpm --filter \"./apps/**\" --if-present test",

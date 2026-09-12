@@ -1,6 +1,6 @@
-# wx-md
+# AutoMatic
 
-wx-md 是一个面向微信公众号内容创作的前后端 monorepo，提供 BlockSuite 编辑、公众号样式预览，以及基于 JWT 的账号注册、登录和会话续期。
+AutoMatic 是一个面向微信公众号内容创作的前后端 monorepo，提供 BlockSuite 编辑、公众号样式预览，以及基于 JWT 的账号注册、登录和会话续期。
 
 ## 技术架构
 
@@ -18,7 +18,7 @@ wx-md 是一个面向微信公众号内容创作的前后端 monorepo，提供 B
 仓库使用 pnpm workspace：
 
 ```text
-wx-md/
+AutoMatic/
 ├─ apps/
 │  ├─ web/                 # Web 应用，默认端口 5173
 │  └─ api/                 # API 服务，默认端口 3000
@@ -106,10 +106,10 @@ pnpm db:up
 | -------- | -------------------------------------------- |
 | Host     | `localhost`                                  |
 | Port     | `5432`                                       |
-| Database | `wxmd`                                       |
-| User     | `wxmd`                                       |
-| Password | `wxmd`                                       |
-| URL      | `postgresql://wxmd:wxmd@localhost:5432/wxmd` |
+| Database | `automatic`                                                    |
+| User     | `automatic`                                                    |
+| Password | `automatic`                                                    |
+| URL      | `postgresql://automatic:automatic@localhost:5432/automatic`     |
 
 数据库文件保存在 Docker 命名卷中，执行 `pnpm db:down` 后仍会保留。
 
@@ -156,10 +156,10 @@ pnpm dev
 | `HOST`                   | `0.0.0.0`                                    | API 监听地址                                  |
 | `PORT`                   | `3000`                                       | API 监听端口                                  |
 | `CORS_ORIGINS`           | `http://localhost:5173`                      | 允许携带凭据的前端来源，多个来源用逗号分隔    |
-| `DATABASE_URL`           | `postgresql://wxmd:wxmd@localhost:5432/wxmd` | PostgreSQL 连接字符串                         |
+| `DATABASE_URL`           | `postgresql://automatic:automatic@localhost:5432/automatic` | PostgreSQL 连接字符串                         |
 | `JWT_ACCESS_SECRET`      | 无                                           | JWT HMAC 签名密钥，必填且至少 32 个字符       |
-| `JWT_ISSUER`             | `wx-md-api`                                  | Access Token 的签发者                         |
-| `JWT_AUDIENCE`           | `wx-md-web`                                  | Access Token 的接收方                         |
+| `JWT_ISSUER`             | `automatic-api`                              | Access Token 的签发者                         |
+| `JWT_AUDIENCE`           | `automatic-web`                              | Access Token 的接收方                         |
 | `ACCESS_TOKEN_TTL`       | `15m`                                        | Access Token 有效期，范围为 60 秒至 1 天      |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                                          | Refresh Token 有效天数，范围为 1 至 90 天     |
 | `DEV_ADMIN_ENABLED`      | `true`（仅开发）                             | 是否初始化本地管理员；非开发环境禁止为 `true` |
@@ -199,7 +199,7 @@ pnpm dev
 }
 ```
 
-注册、登录和刷新成功后，响应包含短效 Access Token 和公开用户信息；Refresh Token 由服务端通过名为 `wxmd_refresh_token` 的 HttpOnly Cookie 管理：
+注册、登录和刷新成功后，响应包含短效 Access Token 和公开用户信息；Refresh Token 由服务端通过名为 `automatic_refresh_token` 的 HttpOnly Cookie 管理：
 
 ```json
 {
@@ -262,7 +262,7 @@ Authorization: Bearer <access-token>
 | `pnpm test`                      | 运行所有应用测试               |
 | `pnpm build`                     | 构建所有应用                   |
 | `pnpm check`                     | 依次执行类型检查、测试和构建   |
-| `pnpm --filter @wx-md/api start` | 启动已构建的 API               |
+| `pnpm --filter @automatic/api start` | 启动已构建的 API               |
 
 提交前建议运行：
 

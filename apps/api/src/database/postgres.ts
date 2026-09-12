@@ -1,7 +1,7 @@
 import { Pool, type PoolConfig } from 'pg';
 
 const DEFAULT_POOL_CONFIG: Readonly<PoolConfig> = {
-  application_name: 'wx-md-api',
+  application_name: 'automatic-api',
   connectionTimeoutMillis: 5_000,
   idleTimeoutMillis: 30_000,
   max: 10,

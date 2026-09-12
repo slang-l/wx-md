@@ -1,4 +1,4 @@
-# wx-md 认证模块说明
+# AutoMatic 认证模块说明
 
 本文档描述仓库当前已经实现的认证系统，而不是一份待实现的 JWT 示例。服务端使用
 Express 5、PostgreSQL、bcrypt 和 `jsonwebtoken`；浏览器端使用短效 Access Token 与
@@ -68,7 +68,7 @@ HttpOnly Refresh Cookie 维持登录状态。
 
 这种设计避免把长期凭据暴露给前端 JavaScript。Access Token 没有写入
 `localStorage` 或 `sessionStorage`，页面刷新后会消失；Refresh Token 位于
-`wxmd_refresh_token` Cookie 中，设置为：
+`automatic_refresh_token` Cookie 中，设置为：
 
 - `HttpOnly`：前端脚本无法读取；
 - `SameSite=Lax`：减少跨站请求自动携带 Cookie 的风险；
@@ -214,7 +214,7 @@ Content-Type: application/json
 成功：`201 Created`
 
 ```http
-Set-Cookie: wxmd_refresh_token=<opaque-token>; Path=/api/auth; Expires=...; HttpOnly; SameSite=Lax
+Set-Cookie: automatic_refresh_token=<opaque-token>; Path=/api/auth; Expires=...; HttpOnly; SameSite=Lax
 ```
 
 ```json
@@ -262,7 +262,7 @@ Set-Cookie: wxmd_refresh_token=<opaque-token>; Path=/api/auth; Expires=...; Http
 
 ```http
 POST /api/auth/refresh HTTP/1.1
-Cookie: wxmd_refresh_token=<opaque-token>
+Cookie: automatic_refresh_token=<opaque-token>
 ```
 
 成功：`200 OK`，服务端设置一个值不同、但 `Expires` 不延长的新 Cookie，并返回新的
@@ -275,7 +275,7 @@ Access Token 和当前公开用户信息。
 
 ```http
 POST /api/auth/logout HTTP/1.1
-Cookie: wxmd_refresh_token=<opaque-token>
+Cookie: automatic_refresh_token=<opaque-token>
 ```
 
 成功：`204 No Content`，没有 JSON 响应体。无论 Cookie 是否存在都会清除客户端 Cookie；
@@ -372,10 +372,10 @@ authenticatedRequest('/api/auth/me')
 | `HOST`                   | `0.0.0.0`                                     | API 监听地址                                    |
 | `PORT`                   | `3000`                                        | 1～65535 的整数                                 |
 | `CORS_ORIGINS`           | `http://localhost:5173,http://127.0.0.1:5173` | 显式 Origin 列表，逗号分隔；启用凭据时禁止 `*`  |
-| `DATABASE_URL`           | `postgresql://wxmd:wxmd@localhost:5432/wxmd`  | 必填的 PostgreSQL URL                           |
+| `DATABASE_URL`           | `postgresql://automatic:automatic@localhost:5432/automatic` | 必填的 PostgreSQL URL                           |
 | `JWT_ACCESS_SECRET`      | 无安全默认值                                  | 必填，至少 32 个字符；兼容旧变量名 `JWT_SECRET` |
-| `JWT_ISSUER`             | `wx-md-api`                                   | 必填，必须与 Token 验证端一致                   |
-| `JWT_AUDIENCE`           | `wx-md-web`                                   | 必填，必须与 Token 验证端一致                   |
+| `JWT_ISSUER`             | `automatic-api`                               | 必填，必须与 Token 验证端一致                   |
+| `JWT_AUDIENCE`           | `automatic-web`                               | 必填，必须与 Token 验证端一致                   |
 | `ACCESS_TOKEN_TTL`       | `15m`                                         | `数字+s/m/h/d`，实际范围 60 秒～1 天            |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | 1～90 的整数，表示 family 绝对寿命              |
 | `DEV_ADMIN_ENABLED`      | `true`（仅 development）                      | 是否在 API 启动时幂等初始化本地管理员           |
@@ -466,10 +466,10 @@ cp apps/api/.env.example apps/api/.env
 
 ```bash
 # 只运行 API 测试
-pnpm --filter @wx-md/api test
+pnpm --filter @automatic/api test
 
 # 只检查 API 类型
-pnpm --filter @wx-md/api typecheck
+pnpm --filter @automatic/api typecheck
 
 # 全工作区测试
 pnpm test

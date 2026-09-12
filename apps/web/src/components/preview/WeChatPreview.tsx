@@ -268,7 +268,7 @@ export function WeChatPreview({ doc, onClose, userId }: WeChatPreviewProps) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${safeFilename(active.name)}.wxmd-theme.json`;
+    anchor.download = `${safeFilename(active.name)}.automatic-theme.json`;
     anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
     notify('主题文件已导出');
@@ -540,7 +540,7 @@ function safeFilename(value: string) {
     value
       .trim()
       .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-')
-      .slice(0, 60) || 'wxmd-theme'
+      .slice(0, 60) || 'automatic-theme'
   );
 }
 

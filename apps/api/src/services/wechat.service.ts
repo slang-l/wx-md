@@ -116,7 +116,7 @@ export function createWechatService({
   now = Date.now,
 }: WechatServiceOptions): WechatService {
   const encryptionKey = createHmac('sha256', encryptionSecret)
-    .update('wx-md:wechat-credential:v1')
+    .update('automatic:wechat-credential:v1')
     .digest();
   const accessTokens = new Map<string, CachedAccessToken>();
 
@@ -330,7 +330,7 @@ export function createWechatService({
         content = content.replaceAll(image.placeholder, imageUrl);
       }
 
-      if (/wxmd-image:\/\/\d+/.test(content)) {
+      if (/automatic-image:\/\/\d+/.test(content)) {
         throw new AppError(400, 'MISSING_CONTENT_IMAGE', '正文中仍有未上传的图片');
       }
 
@@ -419,7 +419,7 @@ function decryptCredential(value: string, key: Buffer, associatedData: Buffer): 
 }
 
 function credentialAssociatedData(userId: string, appId: string): Buffer {
-  return Buffer.from(`wx-md:wechat:${userId}:${appId}`, 'utf8');
+  return Buffer.from(`automatic:wechat:${userId}:${appId}`, 'utf8');
 }
 
 function toPublicConfig(account: WechatAccount): WechatPublicConfig {

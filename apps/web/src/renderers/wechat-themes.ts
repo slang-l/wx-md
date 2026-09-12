@@ -105,7 +105,7 @@ function createHeadingOneStyle(
 
 function createBaseStyles(color: string, fontFamily = sansFont, fontSize = 16): WechatThemeStyles {
   return {
-    // dolfly/wxmd 的 CSS 会在导出时展开；这里直接生成等价内联样式，确保粘贴到微信后不丢失。
+    // AutoMatic 的 CSS 会在导出时展开；这里直接生成等价内联样式，确保粘贴到微信后不丢失。
     container: styles(
       'box-sizing:border-box',
       'width:100%',
@@ -291,14 +291,14 @@ function createWechatTheme(options: CreateThemeOptions): WechatTheme<WechatTheme
 const defaultTheme = createWechatTheme({
   id: 'default',
   label: '经典',
-  description: 'dolfly/wxmd 经典主题',
+  description: 'AutoMatic 经典主题',
   primaryColor,
 });
 
 const graceTheme = createWechatTheme({
   id: 'grace',
   label: '优雅',
-  description: 'dolfly/wxmd · @brzhang',
+  description: 'AutoMatic · @brzhang',
   primaryColor,
   preview: {
     shadow: '0 8px 24px rgba(15,76,129,0.10)',
@@ -400,7 +400,7 @@ const graceTheme = createWechatTheme({
 const simpleTheme = createWechatTheme({
   id: 'simple',
   label: '简洁',
-  description: 'dolfly/wxmd · @okooo5km',
+  description: 'AutoMatic · @okooo5km',
   primaryColor,
   styles: {
     title: createHeadingOneStyle(primaryColor, '0 auto 1em', {

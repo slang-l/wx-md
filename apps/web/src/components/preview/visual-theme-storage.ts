@@ -43,7 +43,7 @@ interface StoredVisualThemeWorkspace {
 }
 
 interface PortableVisualTheme {
-  format: 'wx-md-visual-theme';
+  format: 'automatic-visual-theme';
   version: 1;
   name: string;
   baseThemeId: WechatThemeId;
@@ -93,7 +93,7 @@ export function saveVisualThemeWorkspace(userId: string, workspace: VisualThemeW
 
 export function serializeVisualTheme(theme: ActiveVisualTheme): string {
   const payload: PortableVisualTheme = {
-    format: 'wx-md-visual-theme',
+    format: 'automatic-visual-theme',
     version: 1,
     name: normalizeName(theme.name, '自定义主题'),
     baseThemeId: theme.baseThemeId,
@@ -112,7 +112,7 @@ export function parseImportedVisualTheme(
     throw new Error('主题文件不是有效的 JSON');
   }
 
-  if (!isRecord(parsed) || parsed.format !== 'wx-md-visual-theme' || parsed.version !== 1) {
+  if (!isRecord(parsed) || parsed.format !== 'automatic-visual-theme' || parsed.version !== 1) {
     throw new Error('无法识别这个主题文件');
   }
 

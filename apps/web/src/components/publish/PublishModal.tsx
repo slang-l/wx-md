@@ -686,7 +686,7 @@ async function prepareArticleContent(
     const blob = await response.blob();
     const extension = imageExtension(blob.type);
     const encoded = await encodeImage(blob, `article-image-${index + 1}.${extension}`);
-    const placeholder = `wxmd-image://${images.length}`;
+    const placeholder = `automatic-image://${images.length}`;
     imageElement.setAttribute('src', placeholder);
     images.push({ ...encoded, placeholder });
   }

@@ -22,10 +22,10 @@ const testConfig: AppConfig = {
   host: '127.0.0.1',
   port: 3000,
   corsOrigins: ['http://localhost:5173'],
-  databaseUrl: 'postgresql://wxmd:test@localhost:5432/wxmd_test',
+  databaseUrl: 'postgresql://automatic:test@localhost:5432/automatic_test',
   jwtAccessSecret: 'test-secret-that-is-at-least-32-characters-long',
-  jwtIssuer: 'wx-md-api-test',
-  jwtAudience: 'wx-md-web-test',
+  jwtIssuer: 'automatic-api-test',
+  jwtAudience: 'automatic-web-test',
   accessTokenTtl: '15m',
   refreshTokenTtlDays: 7,
   developmentAdmin: null,
@@ -36,10 +36,10 @@ const validEnvironment: NodeJS.ProcessEnv = {
   HOST: '127.0.0.1',
   PORT: '3000',
   CORS_ORIGINS: 'http://localhost:5173',
-  DATABASE_URL: 'postgresql://wxmd:test@localhost:5432/wxmd_test',
+  DATABASE_URL: 'postgresql://automatic:test@localhost:5432/automatic_test',
   JWT_ACCESS_SECRET: 'test-secret-that-is-at-least-32-characters-long',
-  JWT_ISSUER: 'wx-md-api-test',
-  JWT_AUDIENCE: 'wx-md-web-test',
+  JWT_ISSUER: 'automatic-api-test',
+  JWT_AUDIENCE: 'automatic-web-test',
   ACCESS_TOKEN_TTL: '15m',
   REFRESH_TOKEN_TTL_DAYS: '7',
 };
@@ -104,7 +104,7 @@ test('GET /api/health returns service status', async () => {
   assert.equal(response.headers['access-control-allow-origin'], 'http://localhost:5173');
   assert.equal(response.headers['access-control-allow-credentials'], 'true');
   assert.equal(response.body.status, 'ok');
-  assert.equal(response.body.service, 'wx-md-api');
+  assert.equal(response.body.service, 'automatic-api');
   assert.equal(typeof response.body.timestamp, 'string');
   assert.equal(typeof response.body.uptime, 'number');
 });
@@ -117,7 +117,7 @@ test('register issues an access token and an HttpOnly refresh cookie', async () 
   assert.equal(response.body.user.email, 'writer@example.com');
   assert.equal(response.body.user.name, 'Writer');
   assert.equal(response.body.refreshToken, undefined);
-  assert.match(setCookie[0], /^wxmd_refresh_token=/);
+  assert.match(setCookie[0], /^automatic_refresh_token=/);
   assert.match(setCookie[0], /HttpOnly/i);
   assert.match(setCookie[0], /SameSite=Lax/i);
   assert.match(setCookie[0], /Path=\/api\/auth/i);
@@ -464,7 +464,7 @@ test('logout revokes the refresh token and clears its cookie', async () => {
 
   const logout = await request(app).post('/api/auth/logout').set('cookie', cookie);
   assert.equal(logout.statusCode, 204);
-  assert.match(String(logout.headers['set-cookie']), /wxmd_refresh_token=;/);
+  assert.match(String(logout.headers['set-cookie']), /automatic_refresh_token=;/);
 
   const refresh = await request(app).post('/api/auth/refresh').set('cookie', cookie);
   assert.equal(refresh.statusCode, 401);
@@ -724,14 +724,14 @@ test('authenticated users can configure and publish to a WeChat official account
       title: 'Published article',
       author: '',
       digest: '',
-      content: '<section><p>Hello</p><img src="wxmd-image://0"></section>',
+      content: '<section><p>Hello</p><img src="automatic-image://0"></section>',
       coverImage: { data: png, mimeType: 'image/png', filename: 'cover.png' },
       contentImages: [
         {
           data: png,
           mimeType: 'image/png',
           filename: 'inline.png',
-          placeholder: 'wxmd-image://0',
+          placeholder: 'automatic-image://0',
         },
       ],
       showCoverPic: true,
@@ -749,7 +749,7 @@ test('authenticated users can configure and publish to a WeChat official account
   assert.equal(draftBody.articles[0].author, 'Writer');
   assert.equal(draftBody.articles[0].digest, 'Default digest');
   assert.match(draftBody.articles[0].content, /mmbiz\.qpic\.cn\/test\/content-image\.png/);
-  assert.doesNotMatch(draftBody.articles[0].content, /wxmd-image/);
+  assert.doesNotMatch(draftBody.articles[0].content, /automatic-image/);
 
   const status = await request(app)
     .get('/api/wechat/publish/publish-id-1')

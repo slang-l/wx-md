@@ -3,9 +3,9 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: wxmd
-      POSTGRES_USER: wxmd
-      POSTGRES_PASSWORD: wxmd
+      POSTGRES_DB: automatic
+      POSTGRES_USER: automatic
+      POSTGRES_PASSWORD: automatic
     ports:
       - '5432:5432'
     volumes:

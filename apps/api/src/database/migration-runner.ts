@@ -7,7 +7,7 @@ import type { Pool, PoolClient, QueryResultRow } from 'pg';
 
 const DEFAULT_MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../migrations/', import.meta.url));
 const MIGRATION_FILE_PATTERN = /^\d+_[a-z0-9][a-z0-9_-]*\.sql$/;
-const MIGRATION_LOCK_NAME = 'wx-md:schema-migrations';
+const MIGRATION_LOCK_NAME = 'automatic:schema-migrations';
 
 interface AppliedMigrationRow extends QueryResultRow {
   name: string;

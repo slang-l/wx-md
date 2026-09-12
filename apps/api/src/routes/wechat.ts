@@ -38,7 +38,7 @@ const publishArticleSchema = z
       .array(
         imageSchema
           .extend({
-            placeholder: z.string().regex(/^wxmd-image:\/\/\d+$/),
+            placeholder: z.string().regex(/^automatic-image:\/\/\d+$/),
           })
           .strict(),
       )

@@ -51,7 +51,7 @@ export function renderWechatHtml(
   </footer>`;
 
   return `
-<section id="output" class="wxmd wxmd-${theme.id}" style="${theme.styles.container}">
+<section id="output" class="automatic automatic-${theme.id}" style="${theme.styles.container}">
   <h1 style="${theme.styles.title}">${escapeHtml(doc.title)}</h1>
   ${renderMeta(doc, theme)}
   ${blocksHtml}

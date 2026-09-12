@@ -64,7 +64,7 @@ export function createAuthService(options: CreateAuthServiceOptions): AuthServic
   const dummyPasswordHash =
     passwordHashRounds === 12
       ? DUMMY_PASSWORD_HASH
-      : bcrypt.hashSync('wx-md-dummy-password', passwordHashRounds);
+      : bcrypt.hashSync('automatic-dummy-password', passwordHashRounds);
 
   function refreshExpiry(): Date {
     return new Date(Date.now() + config.refreshTokenTtlDays * 24 * 60 * 60 * 1000);
